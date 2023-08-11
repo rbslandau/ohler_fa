@@ -1,0 +1,585 @@
+ID,stream,position,time,season,genus,species,sex_m_f,adult_juvenile,comment
+T1,Modenbach,up,23/07/18,summer,Tetragnatha,montana,f,a,
+T2,Modenbach,up,23/07/18,summer,Tetragnatha,montana,m,a,
+T3,Klingbach,up,18/07/18,summer,Tetragnatha,montana,m,a,
+T4,Triefenbach,down,18/07/18,summer,Tetragnatha,montana,m,a,
+T5,Modenbach,up,23/07/18,summer,Tetragnatha,montana,f,a,
+T6,Kropsbach,down,19/07/18,summer,Tetragnatha,montana,f,a,
+T7,Isenach,up,23/07/18,summer,Tetragnatha,montana,f,j,
+T8,Russbach,up,17/05/18,spring,Tetragnatha,montana,f,j,hinterleib zerquetscht
+T9,Modenbach,up,23/07/18,summer,Tetragnatha,montana,m,a,
+T10,Klingbach,up,23/07/18,summer,Tetragnatha,montana,f,a,
+T11,Russbach,down,19/07/18,summer,Tetragnatha,montana,f,j,
+T12,Otterbach,up,19/07/18,summer,Tetragnatha,montana,f,a,
+T13,Otterbach,up,19/07/18,summer,Tetragnatha,montana,f,a,
+T14,Klingbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T15,Klingbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T16,Dierbach,down,16/07/18,summer,Tetragnatha,sp.,f,j,"Opisthosoma fehlt, vmtl montana"
+T17,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T18,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T19,Dierbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T20,Triefenbach,up,17/07/18,summer,Tetragnatha,montana,m,a,
+T21,Klingbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T22,Klingbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T23,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T24,Klingbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T25,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,Bein abgetrennt in Eppi
+T26,Klingbach,down,16/07/18,summer,Tetragnatha,extensa,f,a,Bein abgetrennt in Eppi
+T27,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,"Opisthosoma abgetrennt, Beine abgebrochen in Eppi"
+T28,Hainbach,up,16/07/18,summer,spider,,,,
+T29,Isenach,down,17/07/18,summer,Tetragnatha,montana,f,a,"Opisthosoma abgetrennt in Eppi, Eppi geplatzt"
+T30,Dierbach,down,18/07/18,summer,Tetragnatha,montana,f,a,Beine abgetrennt in Eppi
+T31,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,Beine abgetrennt in Eppi
+T32,Triefenbach,up,17/07/18,summer,spider,,,,"keine Zeichnung auf Sternum, Merkmal an Pedipalpen nicht erkennbar. ziemlich klein. vmtl montana, evtl. noch juvenil?"
+T33,Kropsbach,down,17/07/18,summer,Tetragnatha,extensa,f,a,Bein abgetrennt in Eppi
+T34,Isenach,down,17/07/18,summer,Tetragnatha,montana,f,a,
+T35,Kropsbach,down,17/07/18,summer,Tetragnatha,extensa,f,a,Beine abgetrennt in Eppi
+T36,Isenach,down,17/07/18,summer,Tetragnatha,montana,f,a,
+T37,Kropsbach,down,17/07/18,summer,Tetragnatha,extensa,f,a,
+T38,Triefenbach,down,17/07/18,summer,Tetragnatha,montana,m,a,Pedipalpen abgetrennt in Eppi
+T39,Isenach,down,17/07/18,summer,Tetragnatha,montana,f,j,
+T40,Kropsbach,down,17/07/18,summer,Tetragnatha,montana,f,a,"Opisthosoma abgetrennt, Beine abgebrochen in Eppi"
+T41,Klingbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T42,Russbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T43,Modenbach,down,17/07/18,summer,Tetragnatha,montana,f,j,
+T44,Kropsbach,down,17/07/18,summer,Tetragnatha,sp.,f,j,wahrscheinlich extensa
+T45,Modenbach,down,17/07/18,summer,Tetragnatha,montana,f,a,
+T46,Dierbach,down,17/07/18,summer,Tetragnatha,montana,f,a,Beine fehlen fast alle
+T47,Modenbach,down,18/07/18,summer,Tetragnatha,montana,f,a,
+T48,Triefenbach,down,17/07/18,summer,Tetragnatha,montana,f,a,
+T49,Kropsbach,down,17/07/18,summer,Tetragnatha,extensa,f,a,Bein abgebrochen in Eppi
+T50,Isenach,down,17/07/18,summer,Tetragnatha,sp.,m,j,Abdomen verletzt
+T51,Isenach,down,17/07/18,summer,Tetragnatha,montana,f,a,2 Bilder gemacht
+T52,Kropsbach,down,17/07/18,summer,Tetragnatha,montana,f,a,vielleicht pinicola
+T53,Russbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T54,Klingbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T55,Kropsbach,down,17/07/18,summer,Tetragnatha,extensa,f,NA,Opisthosoma fehlt
+T56,Dierbach,down,18/07/18,summer,Tetragnatha,montana,f,a,
+T57,Russbach,down,16/07/18,summer,Tetragnatha,montana,m,a,
+T58,Russbach,down,16/07/18,summer,Tetragnatha,sp.,f,a,vmtl montana
+T59,Russbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T60,Modenbach,up,23/07/18,summer,Tetragnatha,montana,f,a,
+T61,Kaiserbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T62,Otterbach,up,23/07/18,summer,Tetragnatha,montana,m,a,
+T63,Klingbach,up,16/07/18,summer,Tetragnatha,montana,f,a,
+T64,Otterbach,up,23/07/18,summer,Tetragnatha,montana,f,a,
+T65,Klingbach,down,16/07/18,summer,Tetragnatha,sp.,m,a,evtl. weder montana noch extensa
+T66,Klingbach,down,16/07/18,summer,Tetragnatha,montana,f,a,
+T67,Modenbach,down,17/07/18,summer,Tetragnatha,montana,f,a,
+T68 (373),Russbach,down,19/04/18,spring?,Tetragnatha,montana,f,j,
+T69 (630),Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,j,
+T70 (1504),Modenbach,up,26/07/18,summer?,Tetragnatha,montana,m,a,
+T71 (2582),Otterbach,up,27/08/18,autumn?,Tetragnatha,sp.,f,j,"ohne Daten des Fangorts/-datums, Opisthosoma abgetrennt in Eppi"
+T72 (2869),Hainbach,up,25/06/18,summer?,Tetragnatha,montana,m,a,Opisthosoma abgetrennt in Eppi
+T73 (2900),Klingbach,up,23/04/18,spring?,Tetragnatha,montana,m,a,"ohne Daten des Fangorts/-datums, 2 Spinnen in Eppi
+"
+T74,Klingbach,up,23/04/18,spring?,Tetragnatha,montana,f,a,"ohne Daten des Fangorts/-datums, aus 2900"
+T75 (2904),Klingbach,up,26/04/18,spring?,Tetragnatha,montana,f,a,
+T76 (3532),Dierbach,down,16/08/18,summer?,Tetragnatha,montana,f,a,ohne Daten des Fangorts/-datums
+T77 (4323),Otterbach,up,02/07/18,summer?,Tetragnatha,montana,f,a,"schleimig, nicht für PUFA nehmen"
+T78 (4547),Dierbach,down,30/04/18,summer?,Tetragnatha,montana,f,a,ohne Daten des Fangorts/-datums
+T79 (4594),Dierbach,down,30/04/18,spring?,Tetragnatha,montana,f,a,
+T80,Dierbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T81,Kaiserbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T82,Otterbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,
+T83,Dierbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T84,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T85,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T86,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,2 Spinnen in Eppi
+T87,Klingbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,aus T86
+T88,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,
+T89,Otterbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T90,Otterbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T91,Kaiserbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T92,Russbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T93,Otterbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T94,Otterbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T95,Kaiserbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T96,Otterbach,up,10/09/18,autumn,Tetragnatha,sp.,na,j,wahrscheinlich montana
+T97,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T98,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T99,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T100,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T101,Klingbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T102,Klingbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T103,Otterbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T104,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,a,vielleciht pinicola
+T105,Otterbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T106,Triefenbach,down,15/05/18,spring,Tetragnatha,sp.,m,j,wahrscheinlich montana
+T107,Hainbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T108,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T109,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,m,j,
+T110,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T111,Kaiserbach,down,10/09/18,autumn,Tetragnatha,montana,f,j,
+T112,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T113,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T114,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T115,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T116,Russbach,down,10/09/18,autumn,Tetragnatha,montana,f,j,wahrscheinlich montana
+T117,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T118,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T119,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T120,Kaiserbach,down,10/09/18,autumn,Tetragnatha,montana,m,j,
+T121,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T122,Triefenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T123,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T124,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T125,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T126,Russbach,down,16/05/18,spring,Tetragnatha,montana,m,j,
+T127,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T128,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T129,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T130,Russbach,up,16/05/18,spring,Tetragnatha,montana,f,a,
+T131,Modenbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T132,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T133,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T134,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T135,Isenach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T136,Kropsbach,up,15/05/18,spring,Tetragnatha,sp.,m,j,wahrscheinlich montana
+T137,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T138,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T139,Isenach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T140,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T141,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T142,Kropsbach,down,15/05/18,spring,Tetragnatha,montana,f,j,
+T143,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T144,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T145,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T146,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T147,Hainbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T148,Hainbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T149,Isenach,up,15/05/18,spring,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T150,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T151,Russbach,down,16/05/18,spring,Tetragnatha,montana,f,j,
+T152,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T153,Hainbach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T154,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T155,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T156,Modenbach,down,15/05/18,spring,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T157,Modenbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T158,Triefenbach,up,15/05/18,spring,Tetragnatha,sp.,f,a,wahrscheinlich montana
+T159,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T160,Isenach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T161,Hainbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T162,Hainbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T163,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T164,Triefenbach,down,15/05/18,spring,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T165,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T166,Hainbach,up,15/05/18,spring,Tetragnatha,montana,m,a,"Ort ""Hin"""
+T167,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T168,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T169,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T170,Isenach,down,15/05/18,spring,Tetragnatha,montana,m,a,
+T171,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T172,Kropsbach,down,15/05/18,spring,Tetragnatha,sp.,f,j,vmtl extensa
+T173,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T174,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T175,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T176,Triefenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T177,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T178,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T179,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T180,Triefenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T181,Isenach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T182,Russbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T183,Triefenbach,up,15/05/18,spring,Tetragnatha,extensa,f,a,
+T184,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T185,Isenach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T186,Hainbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T187,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T188,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T189,Russbach,down,16/05/18,spring,Tetragnatha,montana,m,a,
+T190,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T191,Modenbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T192,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,j,
+T193,Modenbach,up,26/07/18,summer?,Tetragnatha,montana,m,a,
+T194,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T195,Modenbach,up,26/07/18,summer?,Tetragnatha,montana,f,a,
+T196,Kaiserbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T197,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T198,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,
+T199,Klingbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T200,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T201,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T202,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T203,Dierbach,down,10/09/18,autumn,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T204,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T205,Kaiserbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T206,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T207,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T208,Klingbach,down,10/09/18,autumn,Tetragnatha,montana,m,a,
+T209,Kaiserbach,up,10/09/18,autumn,Tetragnatha,montana,f,j,
+T210,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T211,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,
+T212,Klingbach,up,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T213,Klingbach,down,10/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T214,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T215,Klingbach,up,10/09/18,autumn,Tetragnatha,montana,f,a,
+T216,Modenbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T217,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T218,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T219,Isenach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T220,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T221,Dierbach,down,18/05/18,spring?,Tetragnatha,montana,m,a,
+T222,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T223,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T224,Kropsbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T225,Isenach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T226,Isenach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T227,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T228,Dierbach,down,18/05/18,spring?,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T229,Russbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T230,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T231,Otterbach,down,14/05/18,spring,Tetragnatha,sp.,m,j,wahrscheinlich montana
+T232,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T233,Isenach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T234,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T235,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T236,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T237,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T238,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T239,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,m,j,
+T240,Klingbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T241,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T242,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T243,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,m,j,
+T244,Otterbach,down,14/05/18,spring,Tetragnatha,montana,m,j,
+T245,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T246,Klingbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T247,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T248,Klingbach,up,14/05/18,spring,Tetragnatha,sp.,f,j,
+T249,Otterbach,down,14/05/18,spring,Tetragnatha,montana,m,a,
+T250,Dierbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T251,Otterbach,down,14/05/18,spring,Tetragnatha,montana,m,a,
+T252,Kaiserbach,down,14/05/18,spring,Tetragnatha,sp.,m,j,
+T253,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,m,a,
+T254,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T255,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T256,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T257,Russbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T258,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T259,Klingbach,up,14/05/18,spring,Tetragnatha,sp.,m,a,
+T260,Russbach,up,16/05/18,spring,Tetragnatha,montana,f,a,
+T261,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T262,Klingbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T263,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T264,Klingbach,up,14/05/18,spring,Tetragnatha,sp.,f,j,
+T265,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T266,Otterbach,down,14/05/18,spring,Tetragnatha,sp.,m,j,wahrscheinlich montana
+T267,Dierbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T268,Dierbach,down,14/05/18,spring,Tetragnatha,montana,m,j,
+T269,Otterbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T270,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T271,Dierbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T272,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T273,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,m,a,
+T274,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T275,Dierbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T276,Otterbach,up,14/05/18,spring,Tetragnatha,sp.,m,j,
+T277,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T278,Klingbach,down,14/05/18,spring,Tetragnatha,sp.,m,j,
+T279,Klingbach,down,14/05/18,spring,Tetragnatha,sp.,f,a,
+T280,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T281,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T282,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T283,Klingbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T284,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T285,Otterbach,up,14/05/18,spring,Tetragnatha,montana,m,a,
+T286,Klingbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T287,Kaiserbach,down,14/05/18,spring,Tetragnatha,sp.,f,j,
+T288,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T289,Kaiserbach,down,14/05/18,spring,Tetragnatha,sp.,m,j,
+T290,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T291,Klingbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T292,Kaiserbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T293,Kaiserbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T294,Klingbach,up,14/05/18,spring,Tetragnatha,sp.,m,j,
+T295,Modenbach,down,16/05/18,spring,Tetragnatha,montana,m,a,
+T296,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T297,Kropsbach,down,16/05/18,spring,Tetragnatha,sp.,f,j,
+T298,Russbach,down,16/05/18,spring,Tetragnatha,extensa,m,j,
+T299,Otterbach,up,14/05/18,spring,Tetragnatha,sp.,f,j,
+T300,Modenbach,down,16/05/18,spring,Tetragnatha,montana,m,a,
+T301,Dierbach,down,14/05/18,spring,Tetragnatha,montana,f,a,
+T302,Kropsbach,down,16/05/18,spring,Tetragnatha,montana,f,a,
+T303,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T304,Russbach,up,16/05/18,spring,Tetragnatha,montana,f,a,
+T305,Otterbach,up,14/05/18,spring,Tetragnatha,montana,f,a,
+T306,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,
+T307,Modenbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T308,Modenbach,up,15/05/18,spring,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T309,Modenbach,up,15/05/18,spring,Tetragnatha,montana,m,a,
+T310,Klingbach,up,16/07/18,summer,Tetragnatha,montana,f,a,
+T311,Kropsbach,up,15/05/18,spring,Tetragnatha,montana,f,j,
+T312,Hainbach,up,12/07/18,summer?,Tetragnatha,montana,f,a,
+T313,Hainbach,down,15/05/18,spring,Tetragnatha,sp.,m,j,
+T314,Hainbach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T315,Dierbach,down,16/07/18,summer,spider,,,,
+T316,Russbach,up,16/07/18,summer,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T317,Modenbach,down,16/05/18,spring,Tetragnatha,sp.,f,a,"Opisthosoma abgetrennt in Eppi, wahrscheinlich montana"
+T318,Klingbach,up,12/07/18,summer?,Tetragnatha,montana,f,a,
+T319,Kropsbach,down,15/05/18,spring,Tetragnatha,sp.,f,a,wahrscheinlich extensa
+T320,Isenach,down,15/05/18,spring,Tetragnatha,montana,f,a,
+T321 (5248),Modenbach,up,20/08/18,autumn?,Tetragnatha,montana,f,a,
+T322,Triefenbach,up,11/09/18,autumn,Tetragnatha,sp.,j,a,wahrscheinlich montana
+T323,Triefenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,Opisthosoma abgetrennt in Eppi
+T324,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T325,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T326,Kaiserbach,up,10/09/18,autumn,Tetragnatha,montana,f,j,
+T327,Kaiserbach,down,11/09/18,autumn,Tetragnatha,montana,m,j,
+T328,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T329,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T330,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T331,Kropsbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,Opisthosoma abgetrennt in Eppi
+T332,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T333,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T334,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,m,j,
+T335,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T336,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T337,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T338,Kropsbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T339,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T340,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,a,wahrscheinlich montana
+T341,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T342,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T343,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T344,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T345,Triefenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,vmtl extensa
+T346,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T347,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T348,Isenach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T349,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T350,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,m,a,Opisthosoma abgetrennt in Eppi
+T351,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T352,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T353,Kropsbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T354,Isenach,up,11/09/18,autumn,Tetragnatha,sp.,m,j,
+T355,Kropsbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T356,Hainbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T357,Hainbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T358,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,m,j,
+T359,Isenach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T360,Modenbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T361,Modenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T362,Modenbach,down,13/09/18,autumn,Tetragnatha,sp.,NA,j,wahrscheinlich montana
+T363,Modenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T364,Modenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T365,Modenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T366,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,Opisthosoma abgetrennt in Eppi
+T367,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,m,j,
+T368,Modenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T369,Modenbach,down,11/09/18,autumn,Tetragnatha,extensa,m,j,
+T370,Modenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T371,Modenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T372,Modenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T373,Triefenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T374,Triefenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T375,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,m,a,
+T376,Kropsbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T377,Isenach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T378,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T379,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T380,Triefenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T381,Hainbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T382,Kropsbach,down,13/09/18,autumn,Tetragnatha,montana,f,a,
+T383,Kropsbach,down,13/09/18,autumn,Tetragnatha,extensa,f,a,
+T384,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T385,Kropsbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,Opisthosoma abgetrennt in Eppi
+T386,Kropsbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T387,Kropsbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T388,Kropsbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T389,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,"up/down fehlt, Opisthosoma abgetrennt in Eppi"
+T390,Triefenbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,up/down fehlt
+T391,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,up/down fehlt
+T392,Triefenbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,up/down fehlt
+T393,Triefenbach,up,13/09/18,autumn,Tetragnatha,montana,f,a,up/down fehlt
+T394,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,up/down fehlt
+T395,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,up/down fehlt: vmtl extensa
+T396,Triefenbach,up,13/09/18,autumn,Tetragnatha,montana,f,j,up/down fehlt
+T397,Triefenbach,up,13/09/18,autumn,Tetragnatha,montana,m,j,up/down fehlt
+T398,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,"up/down fehlt, wahrscheinlich montana"
+T399,Triefenbach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,"up/down fehlt, wahrscheinlich montana"
+T400,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,m,j,wahrscheinlich montana
+T401,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T402,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T403,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,m,j,
+T404,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T405,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T406,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T407,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T408,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T409,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T410,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T411,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T412,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T413,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T414,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T415,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T416,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,a,
+T417,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T418,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,f,j,
+T419,Modenbach,up,11/09/18,autumn,Tetragnatha,montana,m,j,
+T420,Modenbach,up,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T421,Triefenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T422,Triefenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T423,Triefenbach,down,13/09/18,autumn,Tetragnatha,montana,m,j,
+T424,Triefenbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T425,Triefenbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T426,Triefenbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T427,Triefenbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T428,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T429,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T430,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,a,
+T431,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T432,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T433,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T434,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T435,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T436,Isenach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T437,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T438,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T439,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T440,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T441,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T442,Triefenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,vmtl extensa
+T443,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,a,
+T444,Triefenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T445,Triefenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,
+T446,Triefenbach,down,11/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T447,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T448,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T449,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T450,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T451,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,m,j,
+T452,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T453,Triefenbach,down,11/09/18,autumn,Tetragnatha,montana,f,j,
+T454,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,a,
+T455,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,m,j,
+T456,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,a,
+T457,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T458,Klingbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T459,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,a,
+T460,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T461,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,m,j,
+T462,Klingbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T463,Klingbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T464,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T465,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T466,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T467,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T468,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T469,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T470,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T471,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T472,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T473,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,m,j,
+T474,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T475,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T476,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T477,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T478,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T479,Dierbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T480,Dierbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T481,Dierbach,down,12/09/18,autumn,Tetragnatha,extensa,f,j,
+T482,Otterbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T483,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T484,Otterbach,down,12/09/18,autumn,Tetragnatha,extensa,f,a,
+T485,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T486,Otterbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T487,Otterbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T488,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T489,Otterbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T490,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T491,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T492,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T493,Otterbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T494 (5490),Dierbach,down,05/07/18,summer?,Tetragnatha,montana,f,a,
+T495 ,Klingbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T496,Klingbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T497,Klingbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T498,Klingbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T499,Klingbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T500,Klingbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T501,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T502,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich extensa
+T503,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T504,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T505,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T506,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,vmtl extensa
+T507,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T508,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T509,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich extensa
+T510,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,NA,"Opisthosoma fehlt /kaputt, wahrscheinlich montana"
+T511,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,Opisthosoma fast getrennt
+T512,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T513,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T514,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T515,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T516,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T517,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,"Opisthosoma abgetrennt in Eppi, kaputt, wahrscheinlich montana"
+T518,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T519,Russbach,down,12/09/18,autumn,Tetragnatha,extensa,f,j,
+T520,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T521,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T522,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T523,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T524,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T525,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T526,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T527,Russbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T528,Russbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,"Opisthosoma geplatzt, bei 2. Aufnahme opisthosoma noch schlechter erkennbar"
+T529,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T530,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T531,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T532,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T533,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T534,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T535,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T536,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T537,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,m,j,
+T538,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T539,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T540,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T541,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T542,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T543,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,geplatzt
+T544,Otterbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich extensa
+T545,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,f,a,
+T546,Otterbach,up,12/09/18,autumn,Tetragnatha,montana,m,j,
+T547,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T548,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T549,Isenach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T550,Isenach,up,13/09/18,autumn,Tetragnatha,sp.,f,NA,wahrscheinlich montana
+T551,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T552,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T553,Isenach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T554,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T555,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T556,Isenach,up,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T557,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T558,Isenach,up,13/09/18,autumn,Tetragnatha,montana,f,j,
+T559,Isenach,up,13/09/18,autumn,Tetragnatha,sp.,f,NA,"Opisthosoma fehlt, wahrscheinlich montana"
+T560,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T561,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T562,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,a,
+T563,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T564,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T565,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T566,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T567,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T568,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T569,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T570,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T571,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,
+T572,Kaiserbach,down,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T573,Kaiserbach,down,12/09/18,autumn,Tetragnatha,montana,f,j,
+T574,Hainbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T575,Hainbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T576,Hainbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,
+T577,Hainbach,down,13/09/18,autumn,Tetragnatha,sp.,f,j,
+T578,Hainbach,down,13/09/18,autumn,Tetragnatha,montana,f,j,Opisthosoma zerquetscht
+T579,Kaiserbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T580,Kaiserbach,up,12/09/18,autumn,Tetragnatha,montana,f,j,
+T581,Kaiserbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,"Opisthosoma zerquetscht, wahrscheinlich montana"
+T582,Kaiserbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana
+T583,Kaiserbach,up,12/09/18,autumn,Tetragnatha,sp.,f,j,wahrscheinlich montana

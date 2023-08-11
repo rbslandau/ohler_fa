@@ -1,0 +1,3492 @@
+---
+title: "Land use alters ecosystem transfer of high value fatty acids by aquatic insects"
+output:
+  html_document:
+    figure_caption: yes
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  word_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
+```
+
+Katharina Ohler, Verena C. Schreiner, Lukas Reinhard, Moritz Link, Matthias Liess, Werner Brack, Ralf B. Schäfer
+
+# Required packages
+```{r, message=FALSE, warning=FALSE}
+library(data.table) # Data wrangling, version 1.14.2
+library(dplyr) # Data wrangling, version 1.1.0
+library(tidyr) # Data wrangling, version 1.3.0
+library(tidylog, warn.conflicts = FALSE) # Data wrangling, version 1.0.2
+library(plyr) # Data wrangling, version 1.8.7
+
+library(ggplot2) # plots, version 3.4.1
+library(ggpubr) # plots, version 0.4.0
+library(scales) # plots (transparent points in base r plot), version 1.2.0 
+
+library(vegan) # NMDS, ANOSIM, version 2.5.7
+
+library(faraway) # VIF, version 1.0.7
+
+library(texreg) # export model output to html or latex, version 1.38.6
+```
+
+# Set path
+```{r, message=FALSE, warning=FALSE}
+path <-"/Users/katharinafrisch/Documents/Uni/Experiment_2018/Statistics/PUFA_field/ohler_FA_field"
+setwd(path)
+```
+
+# Load data
+```{r, message=FALSE, warning=FALSE}
+fa_field <- read.table("1_field_pufa.csv", header = TRUE, 
+                               sep = ",",na.strings = c("NR", "NA"), 
+                               stringsAsFactors = FALSE, strip.white = TRUE) 
+
+env <- read.table("2_data_env.csv", header = TRUE, 
+                       sep = ",", na.strings = c("NR", "NA"), 
+                       stringsAsFactors = FALSE, strip.white = TRUE) 
+
+spider_data <- read.table("3_spider_identification_30.csv", header = TRUE, 
+                       sep = ",", na.strings = c("NR", "NA"), 
+                       stringsAsFactors = FALSE, strip.white = TRUE) 
+
+```
+
+# Prepare spider data 
+
+Time in date format
+```{r, message=FALSE, warning=FALSE}
+spider_data$time <- as.Date(spider_data$time,format="%d/%m/%y")
+```
+
+Data for statistics
+```{r, message=FALSE, warning=FALSE}
+spider_data_stats <- spider_data
+```
+
+Rename up in forest and down in agriculture
+```{r, message=FALSE, warning=FALSE}
+spider_data_stats$position <- gsub("up", "forest", spider_data_stats$position)
+
+spider_data_stats$position <- gsub("down", "agriculture", spider_data_stats$position)
+```
+
+For some spiders season not correct. So add right season to spiders.
+
+Define seasons:
+spiders sampled in:
+* spring: 14 - 16 May
+* summer: 16 - 19, 23 and 26 July
+* autumn: 10 - 13 September
+```{r, message=FALSE, warning=FALSE}
+spider_data_stats$season <-with(spider_data_stats, ifelse(time > "2018-03-21" & time <= "2018-05-16","spring",ifelse(time > "2018-05-16" & time <= "2018-07-26","summer","autumn")))
+```
+
+# Prepare FA data
+
+The FA date were used to calculate LOQs and so on in the following publication: Trophic transfer of polyunsaturated fatty acids across the aquatic–terrestrial interface: An experimental tritrophic food chain approach of Ohler et al. (2023) (https://doi.org/10.1002/ece3.9927). The raw data of the FA and the R script how the FA was obtained from chromatogram data are available under: https://doi.org/10.5281/zenodo.7692684
+
+## Check duplicates
+```{r, message=FALSE, warning=FALSE}
+test_duplicates <-as.data.frame(duplicated(fa_field))
+test_duplicates$rownames <- rownames(test_duplicates)
+test_duplicates <- filter(test_duplicates, duplicated(fa_field) == TRUE)
+check_rows <- test_duplicates$rownames
+
+test_2_duplicates <- fa_field
+test_2_duplicates$rownames <- rownames(test_2_duplicates)
+
+test_3_duplicates <- filter(test_2_duplicates, rownames %in% check_rows)
+```
+
+Remove duplicates: All values for dry_PUFA = 0, besides of PUFA-KF_25.02.2020 06_56_0220 
+```{r, message=FALSE, warning=FALSE}
+fa_field <- distinct(fa_field)
+```
+
+PUFA-KF_28.02.2020 00_56_3614: 3 times 18:0. Check of chromatogram showed first (biggest peak) is right one. The other two are only small noise peaks. So remove them.
+```{r, message=FALSE, warning=FALSE}
+fa_field <- fa_field[-c(2003, 2004),]
+```
+
+PUFA-KF_09.02.2020 09_40_3629: 2 times 20:1n-9. Check of chromatogram showed both are the same peak with slightly different beginnings. Second peak covers start of peak a little bit better, so remove first one. 
+```{r, message=FALSE, warning=FALSE}
+fa_field <- fa_field[-5707,]
+```
+
+## Calcultate proportion single FA of total FA
+
+Calculation of the FA data from the data of the chromatograms can be found 
+
+* dry_pufa: Weight FA per dry weight of organism (microgramm FA per milligram dry mass)
+
+Calculate total FA amount and add to fa_field table
+```{r, message=FALSE, warning=FALSE}
+field_prop <- ddply(fa_field, c("runinfo", "runname", "dry_weight_mg"), summarise, total_fa=sum(dry_pufa))
+
+fa_field <- merge(fa_field, field_prop, by = c("runinfo", "runname", "dry_weight_mg"))
+```
+
+Check, if in samples with total_fa = 0 have second measurement
+```{r, message=FALSE, warning=FALSE}
+zero_fa_total <- filter(field_prop, total_fa == 0) 
+
+repeated_measurements <- filter(fa_field, runinfo %like% "wh")
+repeated_measurements <- select(repeated_measurements, c("runinfo"))
+repeated_measurements <- distinct(repeated_measurements)
+repeated_measurements$runinfo_wh <- repeated_measurements$runinfo
+repeated_measurements$runinfo <- gsub(" wh", "", repeated_measurements$runinfo)
+
+check_zero_fa <- right_join(repeated_measurements, zero_fa_total, by = "runinfo")
+
+filter(check_zero_fa, is.na(runinfo_wh)) # no second measurement, so really no FA found in sample
+```
+
+Remove sample, where no FA found (because concentrations under LOQ and measurement probably did not work properly)
+```{r, message=FALSE, warning=FALSE}
+fa_field <- filter(fa_field, total_fa != 0)
+```
+
+Deal with repeated measurements, so that not two or more measurements from the same sample in the data
+```{r, message=FALSE, warning=FALSE}
+rep_meas <- c(repeated_measurements$runinfo, repeated_measurements$runinfo_wh) # get runinfo of repeated and original measurement
+
+check_rep <- filter(fa_field, runinfo %in% rep_meas) # get FA data of rep. and original measurements
+
+`%notlike%` <- Negate(`%like%`)
+
+check_rep_1 <- select(check_rep, runinfo) # get measurements, where original and rep. measurement are in data
+check_rep_1 <- distinct(check_rep_1)
+check_rep_1 <-  filter(check_rep_1, runinfo %notlike% "wh") 
+
+rep_meas <- c("Dierbach vine Diptera C", "Otterbach forest Ephemeroptera E", "Triefenbach forest Diptera A", "Triefenbach forest Diptera C", "Triefenbach vine Diptera B", "Dierbach vine Diptera C wh", "Otterbach forest Ephemeroptera E wh", "Triefenbach forest Diptera A wh", "Triefenbach forest Diptera C wh", "Triefenbach vine Diptera B wh")
+
+check_rep <- filter(check_rep, runinfo %in% rep_meas) # get FA data, where original and rep. measurement are in data
+
+check_rep <- reshape2::dcast(check_rep, runinfo + runname ~ name_pufa, value.var = "dry_pufa")
+
+remove <- c("PUFA-KF_25.02.2020 06_56_0220", "AcqMethodName25.11.2020 03_07_0415", "PUFA-KF_19.02.2020 20_41_1413", "PUFA-KF_16.02.2020 09_59_1129", "PUFA-KF_16.02.2020 08_07_1827", "PUFA-KF_19.02.2020 21_36_5914")
+
+`%notin%` <- Negate(`%in%`)
+
+length(unique(fa_field$runname)) # 766
+
+fa_field <- filter(fa_field, runname %notin% remove)
+
+length(unique(fa_field$runname)) # 760, worked, because 6 measurements removed
+```
+
+Remove for:
+
+* Dierbach vine Diptera C: PUFA-KF_25.02.2020 06_56_0220, AcqMethodName25.11.2020 03_07_0415
+
+
+* Otterbach forest Ephemeroptera E: PUFA-KF_19.02.2020 20_41_1413 (original still better than repeated measurement)
+
+* Triefenbach forest Diptera A: PUFA-KF_16.02.2020 09_59_1129 (original still better than repeated measurement)
+
+* Triefenbach forest Diptera C: PUFA-KF_16.02.2020 08_07_1827
+
+* Triefenbach vine Diptera B: PUFA-KF_19.02.2020 21_36_5914 (original still better than repeated measurement)
+
+Calculate proportion single FA of total FA
+```{r, message=FALSE, warning=FALSE}
+fa_field$prop_fa <- with(fa_field, (dry_pufa/total_fa))
+```
+
+Get separate columns with info from column runinfo 
+```{r, message=FALSE, warning=FALSE}
+fa_field <- separate(fa_field, runinfo, c("stream", "position", "order", "period", "time_2"), sep = " ", remove = FALSE)
+```
+
+Get one table with emergence and one with spiders, because preparation for both is different
+```{r, message=FALSE, warning=FALSE}
+fa_emergence <- filter(fa_field, !is.na(period))
+
+fa_spider <- filter(fa_field, is.na(period))
+```
+
+For emergence data: Rename vine in agriculture
+```{r, message=FALSE, warning=FALSE}
+fa_emergence$position <- gsub("vine", "agriculture", fa_emergence$position)
+```
+
+Add season in emergence data
+
+* A - D: spring (18.03 - 16.05.2018)
+* E - J: summer (17.05 - 26.08.2018)
+* K - N: summer (26.08 - 13.09.2018)
+
+* not pooled correctly:"C-E" and "D-E", name as spring_summer
+```{r, message=FALSE, warning=FALSE}
+unique(fa_emergence$period)
+
+spring <- c("A", "B", "C", "D", "A-B", "B-C", "C-D")
+summer <- c("E", "F", "G", "H", "I", "J", "E-F", "F-J", "G-H", "F-I", "I-J", "F-G", "F-H", "G-J", "H-I", "H-J")
+autumn <- c("K", "L", "M", "N", "K-L", "K-N", "K-M", "L-N", "L-M", "M-N")
+
+fa_emergence$season <- with(fa_emergence, ifelse(period %in% spring, "spring",
+                                              ifelse(period %in% summer, "summer",
+                                              ifelse(period %in% autumn, "autumn",
+                                                     "spring_summer"))))
+
+fa_emergence_1 <- fa_emergence
+```
+
+For emergence data: Remove not correctly pooled samples
+```{r, message=FALSE, warning=FALSE}
+fa_emergence <- filter(fa_emergence, season != "spring_summer")
+```
+
+For spider data: Set runinfo as ID
+```{r, message=FALSE, warning=FALSE}
+fa_spider$ID<- fa_spider$runinfo
+```
+
+For spider data: Remove columns stream, position, period, time_2
+```{r, message=FALSE, warning=FALSE}
+fa_spider <- select(fa_spider, -c("stream", "position", "order", "period", "time_2"))
+```
+
+Add stream, position and season to spider data by using the spider data
+```{r, message=FALSE, warning=FALSE}
+fa_spider <- left_join(fa_spider, spider_data_stats, by = c("ID"))
+```
+
+Add order to spider data
+```{r, message=FALSE, warning=FALSE}
+fa_spider$order <- "Araneae"
+```
+
+Count spiders
+```{r, message=FALSE, warning=FALSE}
+count_spider <- select(fa_spider, c("ID", "genus", "species", "sex_m_f", "adult_juvenile"))
+
+count_spider <- distinct(count_spider) # 230 spiders analysed: 100 %
+
+#write.csv(count_spider, file = "count_spider.csv", row.names = FALSE)
+
+count_spider <- filter(count_spider, species == "montana") # 212 T. montana: 92%
+
+count_spider <- filter(count_spider, sex_m_f == "f") # 199 female T. montana: 87%
+
+count_spider <- filter(count_spider, adult_juvenile == "a") # 167 adult female T. montana: 73% 
+```
+
+# ANOSIM
+
+* Compare FA profiles between forested and agricultural sites
+
+* No comparison for Plecoptera in autumn, because in autumn no Plecoptera emerged in agricultural sites
+
+## Preparation
+
+Put data in needed format
+```{r, message=FALSE, warning=FALSE}
+fa_spider_stat <- reshape2::dcast(fa_spider, stream + position + order + season + runinfo + runname ~ name_pufa, value.var = "prop_fa", fill = 0)
+  
+fa_emergence_stat <- reshape2::dcast(fa_emergence, stream + position + order + season + runinfo + runname ~ name_pufa, value.var = "prop_fa", fill = 0)
+```
+
+Bind tables together
+```{r, message=FALSE, warning=FALSE}
+fa_stat <- rbind(fa_emergence_stat, fa_spider_stat)
+```
+
+Get matrix for FA and site information
+```{r, message=FALSE, warning=FALSE}
+site_dat <- select(fa_stat, c("stream", "position", "order", "season"))
+site_dat$season <- factor(site_dat$season, levels = c("spring", "summer", "autumn"))
+
+fa <- select(fa_stat, -c("stream", "position", "order", "season", "runinfo", "runname"))
+fa_ma <- as.matrix(fa)
+```
+
+## Same order within same season to compare land use
+### Spiders
+```{r, message=FALSE, warning=FALSE}
+spider_spring <- which(site_dat$season == "spring" & site_dat$order == "Araneae")
+spider_summer <- which(site_dat$season == "summer" & site_dat$order == "Araneae")
+spider_autumn <- which(site_dat$season == "autumn" & site_dat$order == "Araneae")
+
+set.seed(222)
+anosim_spider_spring <- anosim(fa_ma[spider_spring,], site_dat[spider_spring,]$position, distance = "euclidean")
+summary(anosim_spider_spring)
+
+set.seed(222)
+anosim_spider_summer <- anosim(fa_ma[spider_summer,], site_dat[spider_summer,]$position, distance = "euclidean")
+summary(anosim_spider_summer)
+
+set.seed(222)
+anosim_spider_autumn <- anosim(fa_ma[spider_autumn,], site_dat[spider_autumn,]$position, distance = "euclidean")
+summary(anosim_spider_autumn)
+```
+
+### Ephemeroptera
+```{r, message=FALSE, warning=FALSE}
+eph_spring <- which(site_dat$season == "spring" & site_dat$order == "Ephemeroptera")
+eph_summer <- which(site_dat$season == "summer" & site_dat$order == "Ephemeroptera")
+eph_autumn <- which(site_dat$season == "autumn" & site_dat$order == "Ephemeroptera")
+
+set.seed(222)
+anosim_eph_spring <- anosim(fa_ma[eph_spring,], site_dat[eph_spring,]$position, distance = "euclidean")
+summary(anosim_eph_spring)
+
+set.seed(222)
+anosim_eph_summer <- anosim(fa_ma[eph_summer,], site_dat[eph_summer,]$position, distance = "euclidean")
+summary(anosim_eph_summer)
+
+set.seed(222)
+anosim_eph_autumn <- anosim(fa_ma[eph_autumn,], site_dat[eph_autumn,]$position, distance = "euclidean")
+summary(anosim_eph_autumn)
+```
+
+### Plecoptera
+```{r, message=FALSE, warning=FALSE}
+ple_spring <- which(site_dat$season == "spring" & site_dat$order == "Plecoptera")
+ple_summer <- which(site_dat$season == "summer" & site_dat$order == "Plecoptera")
+ple_autumn <- which(site_dat$season == "autumn" & site_dat$order == "Plecoptera")
+
+set.seed(222)
+anosim_ple_spring <- anosim(fa_ma[ple_spring,], site_dat[ple_spring,]$position, distance = "euclidean")
+summary(anosim_ple_spring)
+
+set.seed(222)
+anosim_ple_summer <- anosim(fa_ma[ple_summer,], site_dat[ple_summer,]$position, distance = "euclidean")
+summary(anosim_ple_summer)
+
+#set.seed(222)
+#anosim_ple_autumn <- anosim(fa_ma[ple_autumn,], site_dat[ple_autumn,]$position, distance = "euclidean") # no comparison possible, because no Plecoptera emerged in agriculture
+```
+
+### Trichoptera 
+```{r, message=FALSE, warning=FALSE}
+tri_spring <- which(site_dat$season == "spring" & site_dat$order == "Trichoptera")
+tri_summer <- which(site_dat$season == "summer" & site_dat$order == "Trichoptera")
+tri_autumn <- which(site_dat$season == "autumn" & site_dat$order == "Trichoptera")
+
+set.seed(222)
+anosim_tri_spring <- anosim(fa_ma[tri_spring,], site_dat[tri_spring,]$position, distance = "euclidean")
+summary(anosim_tri_spring)
+
+set.seed(222)
+anosim_tri_summer <- anosim(fa_ma[tri_summer,], site_dat[tri_summer,]$position, distance = "euclidean")
+summary(anosim_tri_summer)
+
+set.seed(222)
+anosim_tri_autumn <- anosim(fa_ma[tri_autumn,], site_dat[tri_autumn,]$position, distance = "euclidean")
+summary(anosim_tri_autumn)
+```
+
+### Diptera 
+```{r, message=FALSE, warning=FALSE}
+dip_spring <- which(site_dat$season == "spring" & site_dat$order == "Diptera")
+dip_summer <- which(site_dat$season == "summer" & site_dat$order == "Diptera")
+dip_autumn <- which(site_dat$season == "autumn" & site_dat$order == "Diptera")
+
+set.seed(222)
+anosim_dip_spring <- anosim(fa_ma[dip_spring,], site_dat[dip_spring,]$position, distance = "euclidean")
+summary(anosim_dip_spring)
+
+set.seed(222)
+anosim_dip_summer <- anosim(fa_ma[dip_summer,], site_dat[dip_summer,]$position, distance = "euclidean")
+summary(anosim_dip_summer)
+
+set.seed(222)
+anosim_dip_autumn <- anosim(fa_ma[dip_autumn,], site_dat[dip_autumn,]$position, distance = "euclidean")
+summary(anosim_dip_autumn)
+```
+
+## Extract R and p-values
+```{r, message=FALSE, warning=FALSE}
+anosim_name <- c("anosim_spider_spring", "anosim_spider_summer",
+                 "anosim_spider_autumn", 
+                 "anosim_eph_spring", "anosim_eph_summer", "anosim_eph_autumn",
+                 "anosim_ple_spring", "anosim_ple_summer",
+                 "anosim_tri_spring", "anosim_tri_summer", "anosim_tri_autumn",
+                 "anosim_dip_spring", "anosim_dip_summer", "anosim_dip_autumn")
+
+anosim_p <- rbind(anosim_spider_spring$signif, anosim_spider_summer$signif,
+                 anosim_spider_autumn$signif, 
+                 anosim_eph_spring$signif, anosim_eph_summer$signif,
+                 anosim_eph_autumn$signif, 
+                 anosim_ple_spring$signif, anosim_ple_summer$signif,
+                 anosim_tri_spring$signif, anosim_tri_summer$signif,
+                 anosim_tri_autumn$signif, 
+                 anosim_dip_spring$signif, anosim_dip_summer$signif,
+                 anosim_dip_autumn$signif)
+
+anosim_R <- rbind(anosim_spider_spring$statistic, anosim_spider_summer$statistic,
+                 anosim_spider_autumn$statistic, 
+                 anosim_eph_spring$statistic, anosim_eph_summer$statistic,
+                 anosim_eph_autumn$statistic, 
+                 anosim_ple_spring$statistic, anosim_ple_summer$statistic,
+                 anosim_tri_spring$statistic, anosim_tri_summer$statistic,
+                 anosim_tri_autumn$statistic, 
+                 anosim_dip_spring$statistic, anosim_dip_summer$statistic,
+                 anosim_dip_autumn$statistic)
+
+anosim <- as.data.frame(cbind(anosim_name, anosim_p, anosim_R))
+
+names(anosim)[2] <- "p_value"
+names(anosim)[3] <- "R"
+
+anosim$R <- as.numeric(anosim$R)
+anosim$R <- round(anosim$R, digits  = 2)
+```
+
+## Adjust p-values and save NMDS Results
+```{r, message=FALSE, warning=FALSE}
+anosim$p_value_adjusted <- p.adjust(anosim$p_value, method = "hochberg")
+
+#write.csv(anosim, "anosim.csv", row.names = FALSE)
+```
+
+# SIMPER 
+
+SIMPER analysis, where ANOSIM was significant:
+
+* Ephemeroptera spring and summer
+* Trichoptera summer
+* Diptera spring and summer
+
+## Ephemeroptera
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring <- simper(fa_ma[eph_spring,], 
+                       group =  site_dat[eph_spring,]$position)
+
+summary(simper_eph_spring)
+```
+
+## Trichoptera
+```{r, message=FALSE, warning=FALSE}
+simper_tri_summer <- simper(fa_ma[tri_summer,], 
+                       group =  site_dat[tri_summer,]$position)
+
+summary(simper_tri_summer)
+```
+
+## Diptera
+```{r, message=FALSE, warning=FALSE}
+simper_dip_spring <- simper(fa_ma[dip_spring,], 
+                       group =  site_dat[dip_spring,]$position)
+
+summary(simper_dip_spring)
+```
+
+## Save SIMPER results
+Get summary
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring_summary <- summary(simper_eph_spring)
+
+simper_tri_summer_summary <- summary(simper_tri_summer)
+
+simper_dip_spring_summary <- summary(simper_dip_spring)
+```
+
+Add season to lists
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring_summary[[1]]$Season <- "spring"
+
+simper_tri_summer_summary[[1]]$Season <- "summer"
+
+simper_dip_spring_summary[[1]]$Season <- "spring"
+```
+
+Add order to lists
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring_summary[[1]]$Order <- "Ephemeroptera"
+
+simper_tri_summer_summary[[1]]$Order <- "Trichoptera"
+
+simper_dip_spring_summary[[1]]$Order <- "Diptera"
+```
+
+Rownames as column
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring_summary[[1]]$FA <- rownames(simper_eph_spring_summary[[1]]) 
+
+simper_tri_summer_summary[[1]]$FA <- rownames(simper_tri_summer_summary[[1]])
+
+simper_dip_spring_summary[[1]]$FA <- rownames(simper_dip_spring_summary[[1]]) 
+```
+
+Chose cumsum nearest to 70 % (0.7)
+```{r, message=FALSE, warning=FALSE}
+closest_greater <-  function(x, viable_numbers) {
+  min(viable_numbers[viable_numbers >= x])
+}
+
+simper_eph_spring_summary[[1]] <- filter(simper_eph_spring_summary[[1]], 
+                    cumsum <= closest_greater(0.7, simper_eph_spring_summary[[1]]$cumsum))
+
+simper_tri_summer_summary[[1]] <- filter(simper_tri_summer_summary[[1]], 
+                    cumsum <= closest_greater(0.7, simper_tri_summer_summary[[1]]$cumsum))
+
+simper_dip_spring_summary[[1]] <- filter(simper_dip_spring_summary[[1]], 
+                    cumsum <= closest_greater(0.7, simper_dip_spring_summary[[1]]$cumsum))
+```
+
+Lists to data frames
+```{r, message=FALSE, warning=FALSE}
+simper_eph_spring_summary <- do.call(rbind, simper_eph_spring_summary) 
+
+simper_tri_summer_summary <- do.call(rbind, simper_tri_summer_summary) 
+
+simper_dip_spring_summary <- do.call(rbind, simper_dip_spring_summary) 
+```
+
+Bind summary data frames
+```{r, message=FALSE, warning=FALSE}
+simper_summary <- rbind(simper_eph_spring_summary,
+                        simper_tri_summer_summary,
+                        simper_dip_spring_summary)
+```
+
+Put column in other order
+```{r, message=FALSE, warning=FALSE}
+simper_summary <- select(simper_summary, 
+                         c("Order", "Season",
+                           "FA", "average", "sd", 
+                           "ratio", "ava", "avb", "cumsum"))
+```
+
+Rename columns
+```{r, message=FALSE, warning=FALSE}
+colnames_simper_summary <- c("Order", "Season",
+                           "FA", "Average", 
+                           "Standard deviation", "Ratio", 
+                           "Average agriculture", "Average forest", 
+                           "Cumulative contribution")
+names(simper_summary) <- colnames_simper_summary
+```
+
+Round 2 digits
+```{r, message=FALSE, warning=FALSE}
+simper_summary[,4:9] <- round(simper_summary[,4:9], digits = 2)
+```
+
+Rename FA
+```{r, message=FALSE, warning=FALSE}
+simper_summary$FA <- gsub("20:5n-3", "EPA", simper_summary$FA) # eicosapentaenoic acid
+simper_summary$FA <- gsub("18:3n-3", "ALA", simper_summary$FA) # alpha-linolenic acid
+simper_summary$FA <- gsub("18:3n-6", "GLA", simper_summary$FA) # gamma-Linolenic acid
+simper_summary$FA <- gsub("18:2n-6c", "LIN", simper_summary$FA) # Linoleic acid
+simper_summary$FA <- gsub("18:1n-9t", "ELA", simper_summary$FA) # Elaidic acid
+
+simper_summary$FA <- gsub("18:0", "ODA", simper_summary$FA) # Octadecanoic acid
+simper_summary$FA <- gsub("20:0", "EA", simper_summary$FA) # Eicosanoic acid
+```
+
+Save csv
+```{r, message=FALSE, warning=FALSE}
+#write.csv(simper_summary, file = "simper_summary.csv", row.names = FALSE)
+```
+
+Which FA contribute to differences
+```{r, message=FALSE, warning=FALSE}
+unique(simper_summary$FA)
+```
+
+Average a bigger average b
+```{r, message=FALSE, warning=FALSE}
+simper_summary$ava_bigger <- with(simper_summary, ifelse(`Average agriculture` > `Average forest`, "y", "n"))
+```
+
+# Plot FA
+
+```{r, message=FALSE, warning=FALSE}
+fa_diff_simper_spider <- select(fa_spider, 
+                                c("name_pufa", "prop_fa", "stream", 
+                                  "position", "season", "order"))
+
+fa_diff_simper_emergence <- select(fa_emergence, 
+                                c("name_pufa", "prop_fa", "stream", 
+                                  "position", "season", "order"))
+
+fa_diff_simper <- rbind(fa_diff_simper_spider, fa_diff_simper_emergence)
+
+fa_diff_simper <- ddply(fa_diff_simper, 
+                        c("position", "order", "season", "name_pufa"),
+                        summarise,
+                        mean_prop_fa = mean(prop_fa),
+                        sd_prop_fa = sd(prop_fa))
+
+fa_diff_simper$order <- with(fa_diff_simper, 
+                             ifelse(order == "Diptera", "Flies (Diptera)",
+                             ifelse(order == "Ephemeroptera", 
+                                    "Mayflies (Ephemeroptera)",
+                             ifelse(order == "Plecoptera", 
+                                    "Stoneflies (Plecoptera)",
+                             ifelse(order == "Trichoptera", 
+                                    "Caddisflies (Trichoptera)",
+                             ifelse(order == "Araneae", "Spiders (Araneae)",
+                                    NA))))))
+
+fa_diff_simper$position <- factor(fa_diff_simper$position,
+                                      levels = c("forest", "agriculture"))
+fa_diff_simper$season <- factor(fa_diff_simper$season,
+                                      levels = c("spring", "summer", "autumn"))
+
+fa_diff_simper$order <- factor(fa_diff_simper$order,
+                                      levels = c("Flies (Diptera)", 
+                                                 "Mayflies (Ephemeroptera)",
+                                                 "Stoneflies (Plecoptera)",
+                                                 "Caddisflies (Trichoptera)",
+                                                 "Araneae", "Spiders (Araneae)"))
+
+
+fa_diff_simper_col <- ifelse(fa_diff_simper$name_pufa  %in% 
+                            c("18:3n-3", "18:3n-6", 
+                              "18:2n-6c", "18:1n-9t", 
+                              "18:0", "20:5n-3",
+                              "20:0"), "black",
+                            "grey")
+
+
+all_pufa <- ggplot() +
+  theme_classic() + 
+  theme(legend.position="bottom",
+      plot.title = element_text(size=20), legend.text = element_text(size=20),
+      legend.title = element_blank(),
+      axis.text.y = element_text(size=15, colour = fa_diff_simper_col), 
+      axis.title = element_text(size=20),
+      axis.text.x = element_text(size=20),
+      strip.text = element_text(size=20)) +
+  labs(x=expression(~ proportion ~ of ~ total ~ PUFA),
+       y=expression()) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  scale_fill_manual(values = c("chartreuse4", "deepskyblue")) +
+ facet_grid(order ~ season) +
+  geom_bar(data = fa_diff_simper, 
+             aes(x=mean_prop_fa, y=name_pufa, col = position, 
+             fill = position), position = "dodge",
+             show.legend = TRUE, alpha = 0.8, lwd=0.1, stat = "identity") +
+  geom_errorbar(data = fa_diff_simper,
+                aes(x=mean_prop_fa, col = position,
+                    y=name_pufa, xmin=mean_prop_fa, xmax=mean_prop_fa+sd_prop_fa), 
+                show.legend = FALSE, alpha = 0.8, position = "dodge")
+#png(filename="all_pufa.png", width=15, height=25, units="in", res=300)
+all_pufa
+#dev.off()
+```
+
+# RDA 
+
+* Analyse effect of environmental variables on FA profiles
+
+## Prepare environmental variables
+
+Some environmental variables and the biomass of emergence were used in the publication: Land use changes biomass and temporal patterns of insect cross-ecosystem flows of Ohler et al. (2023) (https://doi.org/10.1111/gcb.16462). The raw data of the  environmental variables and biomass of emergence as well as the R script how the mean of the environmental variables and biomass were obtained are available under: https://doi.org/10.5281/zenodo.7123464 
+
+For emergence:
+* Water temperature: important factor for FA (FA content adjusted depending on temperature)
+* Nitrate and phosphate: May affect primary producer and therefore trophic transfer of FA and may also have effect on emergence
+* Shading: May affect primary producer and therefore trophic transfer of FA and may also have effect on emergence
+* Pools: May affect emergence
+* Oxygen saturation: May affect emergence
+* Pesticide toxicity: May affect emergence
+* Electrical conductivity: May have effect on emergence
+
+For spiders:
+* Biomass of emergence: Determines amount of emergence as potential food for spiders and emergence can be important source for FA 
+* Air temperature: important factor for FA (FA content adjusted depending on temperature)
+* Shading: Effect on primary producer and therefore potential effect on trophic transfer of FA and also direct effect on spiders
+* Nitrate and phosphate:  Effect on primary producer and therefore potential effect on trophic transfer of FA and also direct effect on spiders
+* Pesticide toxicity 
+ 
+### Chose environmental variables
+```{r, message=FALSE, warning=FALSE}
+ env_1 <- select(env, c("Site", "stream", "position",	"season",
+                      "max_sumTU_ms_pyr",
+                      "NO3", "PO4", "water_temp", "air.temperature",
+                      "conductivity", "shading",	"o2_perc",	
+                      "pools", "biomass_site_mean"))
+
+```
+
+
+### Check collinearity
+```{r, message=FALSE, warning=FALSE}
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- abs(cor(x, y, use="complete.obs"))
+  txt <- format(c(r, 0.123456789), digits=digits)[1]
+  txt <- paste(prefix, txt, sep="")
+  if(missing(cex.cor)) cex <- 0.8/strwidth(txt)
+  
+  test <- cor.test(x,y)
+  # borrowed from printCoefmat
+  Signif <- symnum(test$p.value, corr = FALSE, na = FALSE,
+                   cutpoints = c(0, 0.05, 0.1, 1),
+                   symbols = c("*", ".", " "))
+  
+  text(0.5, 0.5, txt, cex = cex * r)
+  text(.8, .8, Signif, cex=cex, col=2)
+}
+
+pairs(env_1[,5:14], lower.panel = panel.smooth, upper.panel = panel.cor)
+
+cor <- cor(env_1[,5:14]) 
+
+sort(vif(env_1[,5:14]))
+```
+
+* water and air temperature correlated, but no problem, because water temperature will be used for emergence and air temperature for spiders
+
+Rename vine in agriculture
+```{r, message=FALSE, warning=FALSE}
+env_1$position <- gsub("vine", "agriculture", env_1$position)
+```
+
+Column air.temperature in air_temp
+```{r, message=FALSE, warning=FALSE}
+names(env_1)[9] <- "air_temp"
+```
+
+## Prepare FA data
+Get mean of FA per stream, position, season and order
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_mean <- aggregate(fa_emergence_stat[, 7:27],
+                               list(fa_emergence_stat$stream,
+                                          fa_emergence_stat$position,
+                                          fa_emergence_stat$season), mean)
+
+names(fa_emergence_mean)[1:3] <- c("stream", "position", "season")
+
+fa_emergence_order_mean <- aggregate(fa_emergence_stat[, 7:27],
+                               list(fa_emergence_stat$stream,
+                                          fa_emergence_stat$position,
+                                          fa_emergence_stat$season,
+                                          fa_emergence_stat$order), mean)
+
+names(fa_emergence_order_mean)[1:4] <- c("stream", "position", "season", "order")
+
+fa_spider_mean <- aggregate(fa_spider_stat[, 7:27],
+                               list(fa_spider_stat$stream,
+                                          fa_spider_stat$position,
+                                          fa_spider_stat$season), mean)
+
+names(fa_spider_mean)[1:3] <- c("stream", "position", "season")
+```
+
+Merge env_1 and FA data (so that env and FA data are at same position in table)
+```{r, message=FALSE, warning=FALSE}
+rda_dat <- left_join(fa_emergence_mean, env_1, by = c("stream", "position", "season"))
+
+rda_dat_order <- left_join(fa_emergence_order_mean, env_1, by = c("stream", "position", "season"))
+
+rda_dat_spider <- left_join(fa_spider_mean, env_1, by = c("stream", "position", "season"))
+```
+
+Get data per order
+```{r, message=FALSE, warning=FALSE}
+rda_dat_eph <- filter(rda_dat_order, order == "Ephemeroptera")
+rda_dat_ple <- filter(rda_dat_order, order == "Plecoptera")
+rda_dat_tri <- filter(rda_dat_order, order == "Trichoptera")
+rda_dat_dip <- filter(rda_dat_order, order == "Diptera")
+```
+
+## Prepare all data for RDA
+
+Separate explanatory data from FA data
+```{r, message=FALSE, warning=FALSE}
+rda_env <- rda_dat[,c(1:3,26:35)]
+rda_fa <- rda_dat[,c(4:24)]
+
+rda_env_eph <- rda_dat_eph[,c(1:4,27:36)]
+rda_fa_eph <- rda_dat_eph[,c(5:25)]
+
+rda_env_ple <- rda_dat_ple[,c(1:4,27:36)]
+rda_fa_ple <- rda_dat_ple[,c(5:25)]
+
+rda_env_tri <- rda_dat_tri[,c(1:4,27:36)]
+rda_fa_tri <- rda_dat_tri[,c(5:25)]
+
+rda_env_dip <- rda_dat_dip[,c(1:4,27:36)]
+rda_fa_dip <- rda_dat_dip[,c(5:25)]
+
+rda_env_spi <- rda_dat_spider[,c(1:3,26:35)]
+rda_fa_spi <- rda_dat_spider[,c(4:24)]
+```
+ 
+Remove FA occurring in less than 20 % of observations
+
+* 60 observations in FA mean and Diptera: less than 12 observations
+* 54 observations in FA Ephemeroptera: less than 11 observations
+* 23 observations in FA Plecoptera: less than 5 observations
+* 51 observations in FA Trichoptera: less than 10 observations
+* 50 observations in FA spiders: less than 10 observations
+```{r, message=FALSE, warning=FALSE}
+fa_mean <- decostand(rda_fa, "pa")
+fa_sum <- apply(fa_mean,2,sum)
+sort(fa_sum)
+rda_fa_2<- rda_fa[ , !fa_sum<12] 
+
+fa_eph <- decostand(rda_fa_eph, "pa")
+fa_sum <- apply(fa_eph,2,sum)
+sort(fa_sum)
+rda_fa_eph_2<- rda_fa_eph[ , !fa_sum<11] 
+
+fa_ple <- decostand(rda_fa_ple, "pa")
+fa_sum <- apply(fa_ple,2,sum)
+sort(fa_sum)
+rda_fa_ple_2<- rda_fa_ple[ , !fa_sum<5]
+
+fa_tri <- decostand(rda_fa_tri, "pa")
+fa_sum <- apply(fa_tri,2,sum)
+sort(fa_sum)
+rda_fa_tri_2<- rda_fa_tri[ , !fa_sum<10]
+
+fa_dip <- decostand(rda_fa_dip, "pa")
+fa_sum <- apply(fa_dip,2,sum)
+sort(fa_sum)
+rda_fa_dip_2<- rda_fa_dip[ , !fa_sum<12]
+
+fa_spi <- decostand(rda_fa_spi, "pa")
+fa_sum <- apply(fa_spi,2,sum)
+sort(fa_sum)
+rda_fa_spi_2<- rda_fa_spi[ , !fa_sum<10]
+```
+
+Check gradient length with detrended correspondence analysis: 
+
+* Gives the average standard deviation
+* a completely unimodal gradient ~ 4 SD
+* linear analyses ok for ~ 2-3 SD
+```{r, message=FALSE, warning=FALSE}
+decorana(rda_fa_2) # 1.60 SD
+decorana(rda_fa_eph_2) # 2.88 SD
+decorana(rda_fa_ple_2) # 1.99 SD
+decorana(rda_fa_tri_2) # 1.57 SD
+decorana(rda_fa_dip_2) # 2.13 SD
+decorana(rda_fa_spi_2) # 2.05 SD
+```
+
+* All gradient length okay
+
+## Run RDA
+
+Model selection for most parsimonious model following 
+Borcard, D., Gillet, F., Legendre, P., 2011. Canonical Ordination, in: Borcard, D., Gillet, Francois, Legendre, P. (Eds.), Numerical Ecology with R, Use R. Springer, New York, NY, pp. 153–225. https://doi.org/10.1007/978-1-4419-7976-6_6)
+
+1. Use ordiR2step to select environmental variables in RDA without season and stream: ordiR2step performs forward model choice on adjusted R^2 and P-value, for ordination objects created by rda or capscale.
+
+2. Build final model including season and stream as condition in partial RDA
+
+### RDA total FA
+RDA with all environmental variables with season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_1 <- rda(rda_fa_2 ~ max_sumTU_ms_pyr + NO3 + PO4 + water_temp + 
+             shading + conductivity + pools + o2_perc + season + stream,
+             scale = TRUE,
+             data = rda_env)
+summary(rda_1 , display = NULL)
+summary(rda_1)
+
+round(RsquareAdj(rda_1)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_1) # significant model
+
+set.seed(222)
+anova.cca(rda_1, by = "axis") # first two axis significant
+```
+
+Select environmental variables
+
+* set R2scope = FALSE, because models with less variables than full model can have higher adjusted R^2
+* Pin = 1, because we want to add more variables than stream and season explaining more variation in data than environmental variables
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2 <- ordiR2step(rda(rda_fa_2 ~ season + stream,
+                               scale = TRUE,
+                               data=rda_env),
+                  scope = formula(rda_1), R2scope = FALSE, Pin = 1,
+                  direction="forward", pstep = 1000)
+
+step_R2
+```
+
+Conductivity + pools + o2_perc + water_temp + shading selected as environmental 
+```{r, message=FALSE, warning=FALSE}
+rda_2 <- rda(rda_fa_2 ~  conductivity + pools + o2_perc + water_temp + 
+               shading + season + stream,
+             scale = TRUE,
+             data = rda_env)
+summary(rda_2 , display = NULL)
+summary(rda_2)
+
+round(RsquareAdj(rda_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_2)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_2) # significant model
+
+set.seed(222)
+anova.cca(rda_2, by = "axis") # first two axis significant
+```
+
+Now stream and season as covariates to partial out their effect
+```{r, message=FALSE, warning=FALSE}
+rda_3 <- rda(rda_fa_2 ~ conductivity + pools + o2_perc + 
+                        water_temp + shading +
+               Condition(stream + season),
+             scale = TRUE,
+             data = rda_env)
+summary(rda_3, display = NULL)
+summary(rda_3)
+
+round(RsquareAdj(rda_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_3)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_3) # significant model
+
+set.seed(222)
+anova.cca(rda_3, by = "axis") # first axis significant
+
+set.seed(222)
+vif.cca(rda_3) # no VIF above 10, so okay. (Ignore VIF of factorial variables season and stream, because we keep this variables later as covariates and not remove single factor levels)
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_1 <- varpart(rda_fa_2, 
+                rda_env[,c("conductivity",  "pools",
+                           "o2_perc", "water_temp", "shading")],
+                rda_env[,c("stream", "season")], scale = TRUE)
+vp_1
+plot(vp_1, Xnames = c("env.", "condition"), digits = 2)
+```
+
+### RDA Ephemeroptera
+
+RDA with all environmental variables with season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_eph_1 <- rda(rda_fa_eph_2 
+                   ~ max_sumTU_ms_pyr + NO3 + PO4 + water_temp + 
+              shading + conductivity + pools + o2_perc + season + stream,
+              scale = TRUE, 
+              data = rda_env_eph)
+summary(rda_eph_1, display = NULL)
+summary(rda_eph_1)
+
+round(RsquareAdj(rda_eph_1)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_eph_1) # significant model
+
+set.seed(222)
+anova.cca(rda_eph_1, by = "axis") # no axis significant
+```
+
+Select environmental variables
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2_eph <- ordiR2step(rda(rda_fa_eph_2 ~ season + stream,
+                               scale = TRUE,
+                               data=rda_env_eph),
+                  scope = formula(rda_eph_1), R2scope = FALSE, Pin = 1,
+                  direction="forward", pstep = 1000)
+
+step_R2_eph
+```
+
+Conductivity + PO4 + NO3 + max_sumTU_ms_pyr selected as environmental variables
+```{r, message=FALSE, warning=FALSE}
+rda_eph_2 <- rda(rda_fa_eph_2 
+                   ~ conductivity + PO4 + NO3 + max_sumTU_ms_pyr + 
+                   season + stream,
+              scale = TRUE, 
+              data = rda_env_eph)
+summary(rda_eph_2, display = NULL)
+summary(rda_eph_2)
+
+round(RsquareAdj(rda_eph_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_eph_2)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_eph_2) # significant model
+
+set.seed(222)
+anova.cca(rda_eph_2, by = "axis") # first axis significant
+```
+
+Stream and season as covariates to partial out their effect
+```{r, message=FALSE, warning=FALSE}
+rda_eph_3 <- rda(rda_fa_eph_2 
+                   ~ conductivity + PO4 + NO3 + max_sumTU_ms_pyr + 
+                   Condition(season + stream),
+              scale = TRUE, 
+              data = rda_env_eph)
+summary(rda_eph_3, display = NULL)
+summary(rda_eph_3)
+
+round(RsquareAdj(rda_eph_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_eph_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_eph_3)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_eph_3) # significant model
+
+set.seed(222)
+anova.cca(rda_eph_3, by = "axis") # no axis significant
+
+set.seed(222)
+vif.cca(rda_eph_3) # VIF < 10, so okay
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_1_eph <- varpart(rda_fa_eph_2, 
+                rda_env_eph[,c("conductivity", "PO4", "NO3", "max_sumTU_ms_pyr")],
+                rda_env_eph[,c("stream", "season")], scale = TRUE)
+vp_1_eph
+plot(vp_1_eph, Xnames = c("env.", "condition"), digits = 2)
+```
+
+### RDA Plecoptera
+
+RDA with all environmental variables with season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_ple_1 <- rda(rda_fa_ple_2 
+                   ~ max_sumTU_ms_pyr + NO3 + PO4 + water_temp + 
+              shading + conductivity + pools + o2_perc + season + stream, 
+              scale = TRUE,
+              data = rda_env_ple)
+summary(rda_ple_1 , display = NULL)
+summary(rda_ple_1)
+
+round(RsquareAdj(rda_ple_1)$adj.r.squared, digits = 2) 
+
+set.seed(222)
+anova.cca(rda_ple_1) # no significant model
+
+set.seed(222)
+anova.cca(rda_ple_1, by = "axis") # no axis significant
+```
+
+Select environmental variables
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2_ple <- ordiR2step(rda(rda_fa_ple_2 ~ season + stream,
+                               scale = TRUE,
+                               data=rda_env_ple),
+                  scope = formula(rda_ple_1), R2scope = FALSE, Pin = 1, 
+                  direction="forward", pstep = 1000)
+
+step_R2_ple
+```
+
+PO4 + NO3 + shading selected as environmental variables
+RDA with all environmental variables without season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_ple_2 <- rda(rda_fa_ple_2 
+                   ~ PO4 + NO3 + shading + 
+                   season + stream, 
+              scale = TRUE,
+              data = rda_env_ple)
+summary(rda_ple_2, display = NULL)
+summary(rda_ple_2)
+
+round(RsquareAdj(rda_ple_1)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_2)$adj.r.squared, digits = 2) 
+
+set.seed(222)
+anova.cca(rda_ple_2) # no significant model
+
+set.seed(222)
+anova.cca(rda_ple_2, by = "axis") # no axis significant
+```
+
+Stream and season as covariates
+```{r, message=FALSE, warning=FALSE}
+rda_ple_3 <- rda(rda_fa_ple_2 
+                   ~ PO4 + NO3 + shading + 
+                  Condition(season + stream), 
+              scale = TRUE,
+              data = rda_env_ple)
+summary(rda_ple_3, display = NULL)
+summary(rda_ple_3)
+
+round(RsquareAdj(rda_ple_1)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_2)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_3)$adj.r.squared, digits = 2) 
+
+set.seed(222)
+anova.cca(rda_ple_3) # no significant model
+
+set.seed(222)
+anova.cca(rda_ple_3, by = "axis") # no axis significant
+
+set.seed(222)
+vif.cca(rda_ple_3) # VIF of NO3 > 10
+```
+
+Remove NO3, because VIF > 10 and to reduce effect of collinearity
+```{r, message=FALSE, warning=FALSE}
+rda_ple_4 <- rda(rda_fa_ple_2 
+                   ~ PO4 + shading + 
+                  Condition(season + stream), 
+              scale = TRUE,
+              data = rda_env_ple)
+summary(rda_ple_4, display = NULL)
+summary(rda_ple_4)
+
+round(RsquareAdj(rda_ple_1)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_2)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_3)$adj.r.squared, digits = 2) 
+round(RsquareAdj(rda_ple_4)$adj.r.squared, digits = 2) # only slightly lower adj. R^2, but no VIF > 10, so use this as final model
+
+set.seed(222)
+anova.cca(rda_ple_4) # no significant model
+
+set.seed(222)
+anova.cca(rda_ple_4, by = "axis") # no axis significant
+
+set.seed(222)
+vif.cca(rda_ple_4) # VIF < 10
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_1_ple <- varpart(rda_fa_ple_2, 
+                rda_env_ple[,c("PO4", "shading")],
+                rda_env_ple[,c("stream", "season")], scale = TRUE)
+vp_1_ple
+plot(vp_1_ple, Xnames = c("env.", "condition"), digits = 2)
+```
+
+### RDA Trichoptera
+
+RDA with all environmental variables without season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_tri_1 <- rda(rda_fa_tri_2 
+                   ~ max_sumTU_ms_pyr + NO3 + PO4 + water_temp + 
+              shading + conductivity + pools + o2_perc + season + stream, 
+              scale = TRUE, 
+              data = rda_env_tri)
+summary(rda_tri_1, display = NULL)
+summary(rda_tri_1)
+
+round(RsquareAdj(rda_tri_1)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_tri_1) # significant model
+
+set.seed(222)
+anova.cca(rda_tri_1, by = "axis") # first axis significant
+```
+
+Select environmental variables
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2_tri <- ordiR2step(rda(rda_fa_tri_2 ~ season + stream,
+                               scale = TRUE,
+                               data=rda_env_tri),
+                  scope = formula(rda_tri_1), R2scope = FALSE, Pin = 1,
+                  direction="forward", pstep = 1000)
+
+step_R2_tri
+```
+
+Water_temp + pools + max_sumTU_ms_pyr + shading selected as environmental variable
+```{r, message=FALSE, warning=FALSE}
+rda_tri_2 <- rda(rda_fa_tri_2 
+                   ~ water_temp + pools + max_sumTU_ms_pyr + shading + 
+                   season + stream, 
+                 scale = TRUE,
+                 data = rda_env_tri)
+summary(rda_tri_2, display = NULL)
+summary(rda_tri_2)
+
+round(RsquareAdj(rda_tri_1)$adj.r.squared, digits = 3)
+round(RsquareAdj(rda_tri_2)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_tri_2) # significant model
+
+set.seed(222)
+anova.cca(rda_tri_2, by = "axis") # first two axis significant
+```
+
+Stream and season as covariates to partial out their effects
+```{r, message=FALSE, warning=FALSE}
+rda_tri_3 <- rda(rda_fa_tri_2 
+                   ~ water_temp + pools + max_sumTU_ms_pyr + shading + 
+                   Condition(stream + season), 
+                 scale = TRUE, 
+                 data = rda_env_tri)
+summary(rda_tri_3, display = NULL)
+summary(rda_tri_3)
+
+round(RsquareAdj(rda_tri_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_tri_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_tri_3)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_tri_3) # significant model
+
+set.seed(222)
+anova.cca(rda_tri_3, by = "axis") # first axis significant
+
+set.seed(222)
+vif.cca(rda_tri_3) # VIF water temperature > 10
+```
+
+Remove water temperature
+```{r, message=FALSE, warning=FALSE}
+rda_tri_4 <- rda(rda_fa_tri_2 
+                   ~  pools + max_sumTU_ms_pyr + shading + 
+                   Condition(stream + season), 
+                 scale = TRUE, 
+                 data = rda_env_tri)
+summary(rda_tri_4, display = NULL)
+summary(rda_tri_4)
+
+round(RsquareAdj(rda_tri_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_tri_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_tri_3)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_tri_4)$adj.r.squared, digits = 2) 
+
+set.seed(222)
+anova.cca(rda_tri_4) # significant model
+
+set.seed(222)
+anova.cca(rda_tri_4, by = "axis") # first axis significant
+
+set.seed(222)
+vif.cca(rda_tri_4) # VIF < 10
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_tri <- varpart(rda_fa_tri_2, 
+                rda_env_tri[,c("pools", 
+                               "max_sumTU_ms_pyr",  "shading")],
+                rda_env_tri[,c("stream", "season")], scale = TRUE)
+vp_tri
+plot(vp_tri, Xnames = c("env.", "condition"), digits = 2)
+```
+
+### RDA Diptera (Chironomidae)
+
+RDA with all environmental variables without season and stream
+```{r, message=FALSE, warning=FALSE}
+rda_dip_1 <- rda(rda_fa_dip_2 
+                   ~ max_sumTU_ms_pyr + NO3 + PO4 + water_temp + 
+              shading + conductivity + pools + o2_perc + season + stream, 
+              scale = TRUE, 
+              data = rda_env_dip)
+summary(rda_dip_1, display = NULL)
+summary(rda_dip_1)
+
+round(RsquareAdj(rda_dip_1)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_dip_1) # significant model
+
+set.seed(222)
+anova.cca(rda_dip_1, by = "axis") # first two axis significant
+```
+
+Select environmental variables
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2_dip <- ordiR2step(rda(rda_fa_dip_2 ~ season + stream,
+                               scale = TRUE,
+                               data=rda_env_dip),
+                  scope = formula(rda_dip_1), R2scope = FALSE, Pin = 1, 
+                  direction="forward", pstep = 1000)
+
+step_R2_dip
+```
+
+o2_perc + pools + PO4 + conductivity + NO3 + water_temp + shading selected as environmental variables
+```{r, message=FALSE, warning=FALSE}
+rda_dip_2 <- rda(rda_fa_dip_2 
+                   ~o2_perc + pools + PO4 + conductivity + NO3 +
+                   water_temp + shading + 
+                   season + stream, 
+                 scale = TRUE, 
+                 data = rda_env_dip)
+summary(rda_dip_2, display = NULL)
+summary(rda_dip_2)
+
+round(RsquareAdj(rda_dip_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_dip_2)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_dip_2) # significant model
+
+set.seed(222)
+anova.cca(rda_dip_2, by = "axis") # first two axis significant
+```
+
+Season and stream as covariates to partial out their effect
+```{r, message=FALSE, warning=FALSE}
+rda_dip_3 <- rda(rda_fa_dip_2 
+                   ~ o2_perc + pools + PO4 + conductivity + NO3 +
+                   water_temp + shading +
+                   Condition(stream + season), 
+                 scale = TRUE, 
+                 data = rda_env_dip)
+summary(rda_dip_3 , display = NULL)
+summary(rda_dip_3)
+
+round(RsquareAdj(rda_dip_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_dip_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_dip_3)$adj.r.squared, digits = 3)
+
+set.seed(222)
+anova.cca(rda_dip_3) # significant model
+
+set.seed(222)
+anova.cca(rda_dip_3, by = "axis") # first axis significant
+
+vif.cca(rda_dip_3) # No VIF above 10, so okay
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_dip <- varpart(rda_fa_dip_2, 
+                rda_env_dip[,c("o2_perc", "pools", "PO4", 
+                               "conductivity", "NO3", "water_temp", "shading")],
+                rda_env_dip[,c("stream", "season")], scale = TRUE)
+vp_dip
+plot(vp_dip, Xnames = c("env.", "condition"), digits = 2)
+```
+
+### RDA spider
+
+RDA with all environmental variables
+```{r, message=FALSE, warning=FALSE}
+rda_spi_1 <- rda(rda_fa_spi_2 
+                   ~ max_sumTU_ms_pyr + NO3 + PO4 + air_temp + 
+              shading + biomass_site_mean + stream + season, 
+              scale = TRUE,
+              data = rda_env_spi)
+summary(rda_spi_1, display = NULL)
+summary(rda_spi_1)
+
+round(RsquareAdj(rda_spi_1)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_spi_1) # significant model
+
+set.seed(222)
+anova.cca(rda_spi_1, by = "axis") # first two axis significant
+```
+
+Select environmental variables
+```{r, message=FALSE, warning=FALSE}
+set.seed(222)
+step_R2_dip <- ordiR2step(rda(rda_fa_spi_2 ~ stream + season,
+                               scale = TRUE,
+                               data=rda_env_spi),
+                  scope = formula(rda_spi_1), R2scope = FALSE, Pin = 1,
+                  direction="forward", pstep = 1000)
+
+step_R2_dip
+```
+
+PO4 + air_temp + NO3 + shading selected as environmental variables
+RDA with all environmental variables
+```{r, message=FALSE, warning=FALSE}
+rda_spi_2 <- rda(rda_fa_spi_2 
+                   ~ PO4 + air_temp + NO3 + shading +
+                   stream + season, 
+              scale = TRUE,
+              data = rda_env_spi)
+summary(rda_spi_2, display = NULL)
+summary(rda_spi_2)
+
+round(RsquareAdj(rda_spi_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_spi_2)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_spi_2) # significant model
+
+set.seed(222)
+anova.cca(rda_spi_2, by = "axis") # first two axis significant
+```
+
+Stream and season as covariates to partial out their effect
+```{r, message=FALSE, warning=FALSE}
+rda_spi_3 <- rda(rda_fa_spi_2 
+                   ~ PO4 + air_temp + NO3 + shading +
+                   Condition(stream + season), 
+              scale = TRUE,
+              data = rda_env_spi)
+summary(rda_spi_3, display = NULL)
+summary(rda_spi_3)
+
+round(RsquareAdj(rda_spi_1)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_spi_2)$adj.r.squared, digits = 2)
+round(RsquareAdj(rda_spi_3)$adj.r.squared, digits = 2)
+
+set.seed(222)
+anova.cca(rda_spi_3) # no significant model
+
+set.seed(222)
+anova.cca(rda_spi_3, by = "axis") # no axis significant
+
+set.seed(222)
+vif.cca(rda_spi_3)
+```
+
+Variance partitioning for partial RDA 
+```{r, message=FALSE, warning=FALSE}
+vp_spi <- varpart(rda_fa_spi_2, 
+                rda_env_spi[,c("PO4", "air_temp", "NO3", "shading")],
+                rda_env_spi[,c("stream", "season")], scale = TRUE)
+vp_spi
+plot(vp_spi, Xnames = c("env.", "condition"), digits = 2)
+```
+
+## Save RDA results
+Partial RDA
+```{r, message=FALSE, warning=FALSE}
+rda_names <- c(rep("Emergence",2), rep("Ephemeroptera",2), 
+               rep("Plecoptera",2), rep("Trichoptera",2),
+               rep("Diptera",2), rep("Spider",2))
+
+# adj. R^2
+adj_r_2 <- round((RsquareAdj(rda_3)$adj.r.squared), digits = 3)
+adj_r_2_eph <- round((RsquareAdj(rda_eph_3)$adj.r.squared), digits = 3)
+adj_r_2_ple <- round((RsquareAdj(rda_ple_4)$adj.r.squared), digits = 3)
+adj_r_2_tri <- round((RsquareAdj(rda_tri_4)$adj.r.squared), digits = 3)
+adj_r_2_dip <- round((RsquareAdj(rda_dip_3)$adj.r.squared), digits = 3)
+adj_r_2_spi <- round((RsquareAdj(rda_spi_3)$adj.r.squared), digits = 3)
+
+# p-value
+set.seed(222)
+p_value <- anova.cca(rda_3)$'Pr(>F)'
+
+set.seed(222)
+p_value_eph <- anova.cca(rda_eph_3)$'Pr(>F)' 
+
+set.seed(222)
+p_value_ple <- anova.cca(rda_ple_4)$'Pr(>F)' 
+
+set.seed(222)
+p_value_tri <- anova.cca(rda_tri_4)$'Pr(>F)' 
+
+set.seed(222)
+p_value_dip <- anova.cca(rda_dip_3)$'Pr(>F)' 
+
+set.seed(222)
+p_value_spi <- anova.cca(rda_spi_3)$'Pr(>F)'  
+
+# F
+set.seed(222)
+F <- anova.cca(rda_3)$F
+
+set.seed(222)
+F_eph <- anova.cca(rda_eph_3)$F 
+
+set.seed(222)
+F_ple <- anova.cca(rda_ple_4)$F 
+
+set.seed(222)
+F_tri <- anova.cca(rda_tri_4)$F 
+
+set.seed(222)
+F_dip <- anova.cca(rda_dip_3)$F 
+
+set.seed(222)
+F_spi <- anova.cca(rda_spi_3)$F  
+
+# Variance
+set.seed(222)
+Variance <- anova.cca(rda_3)$Variance
+
+set.seed(222)
+Variance_eph <- anova.cca(rda_eph_3)$Variance 
+
+set.seed(222)
+Variance_ple <- anova.cca(rda_ple_4)$Variance 
+
+set.seed(222)
+Variance_tri <- anova.cca(rda_tri_4)$Variance 
+
+set.seed(222)
+Variance_dip <- anova.cca(rda_dip_3)$Variance 
+
+set.seed(222)
+Variance_spi <- anova.cca(rda_spi_3)$Variance  
+
+# Df
+set.seed(222)
+Df <- anova.cca(rda_3)$Df
+
+set.seed(222)
+Df_eph <- anova.cca(rda_eph_3)$Df 
+
+set.seed(222)
+Df_ple <- anova.cca(rda_ple_4)$Df 
+
+set.seed(222)
+Df_tri <- anova.cca(rda_tri_4)$Df 
+
+set.seed(222)
+Df_dip <- anova.cca(rda_dip_3)$Df 
+
+set.seed(222)
+Df_spi <- anova.cca(rda_spi_3)$Df  
+
+Model_residual <- c(rep(c("model", "residual"), 6))
+
+results_eme <- cbind(Df, Variance, F, p_value, adj_r_2)
+results_eph <- cbind(Df_eph, Variance_eph, F_eph, p_value_eph, adj_r_2_eph)
+results_ple <- cbind(Df_ple, Variance_ple, F_ple, p_value_ple, adj_r_2_ple)
+results_tri <- cbind(Df_tri, Variance_tri, F_tri, p_value_tri, adj_r_2_tri)
+results_dip <- cbind(Df_dip, Variance_dip, F_dip, p_value_dip, adj_r_2_dip)
+results_spi <- cbind(Df_spi, Variance_spi, F_spi, p_value_spi, adj_r_2_spi)
+
+results_rda <- rbind(results_eme, results_eph, results_ple, 
+                     results_tri, results_dip, results_spi)
+results_rda <- cbind(Model_residual, results_rda)
+results_rda <- cbind(rda_names, results_rda)
+
+results_rda_partial <- as.data.frame(results_rda)
+
+#write.csv(results_rda_partial, "results_rda_partial.csv", row.names = FALSE)
+```
+
+RDA with stream and season
+```{r, message=FALSE, warning=FALSE}
+rda_names <- c(rep("Emergence",2), rep("Ephemeroptera",2), 
+               rep("Plecoptera",2), rep("Trichoptera",2),
+               rep("Diptera",2), rep("Spider",2))
+
+# adj. R^2
+adj_r_2 <- round((RsquareAdj(rda_2)$adj.r.squared), digits = 3)
+adj_r_2_eph <- round((RsquareAdj(rda_eph_2)$adj.r.squared), digits = 3)
+adj_r_2_ple <- round((RsquareAdj(rda_ple_2)$adj.r.squared), digits = 3)
+adj_r_2_tri <- round((RsquareAdj(rda_tri_2)$adj.r.squared), digits = 3)
+adj_r_2_dip <- round((RsquareAdj(rda_dip_2)$adj.r.squared), digits = 3)
+adj_r_2_spi <- round((RsquareAdj(rda_spi_2)$adj.r.squared), digits = 3)
+
+# p-value
+set.seed(222)
+p_value <- anova.cca(rda_2)$'Pr(>F)'
+
+set.seed(222)
+p_value_eph <- anova.cca(rda_eph_2)$'Pr(>F)' 
+
+set.seed(222)
+p_value_ple <- anova.cca(rda_ple_2)$'Pr(>F)' 
+
+set.seed(222)
+p_value_tri <- anova.cca(rda_tri_2)$'Pr(>F)' 
+
+set.seed(222)
+p_value_dip <- anova.cca(rda_dip_2)$'Pr(>F)' 
+
+set.seed(222)
+p_value_spi <- anova.cca(rda_spi_2)$'Pr(>F)'  
+
+# F
+set.seed(222)
+F <- anova.cca(rda_2)$F
+
+set.seed(222)
+F_eph <- anova.cca(rda_eph_2)$F 
+
+set.seed(222)
+F_ple <- anova.cca(rda_ple_2)$F 
+
+set.seed(222)
+F_tri <- anova.cca(rda_tri_2)$F 
+
+set.seed(222)
+F_dip <- anova.cca(rda_dip_2)$F 
+
+set.seed(222)
+F_spi <- anova.cca(rda_spi_2)$F  
+
+# Variance
+set.seed(222)
+Variance <- anova.cca(rda_2)$Variance
+
+set.seed(222)
+Variance_eph <- anova.cca(rda_eph_2)$Variance 
+
+set.seed(222)
+Variance_ple <- anova.cca(rda_ple_2)$Variance 
+
+set.seed(222)
+Variance_tri <- anova.cca(rda_tri_2)$Variance 
+
+set.seed(222)
+Variance_dip <- anova.cca(rda_dip_2)$Variance 
+
+set.seed(222)
+Variance_spi <- anova.cca(rda_spi_2)$Variance  
+
+# Df
+set.seed(222)
+Df <- anova.cca(rda_2)$Df
+
+set.seed(222)
+Df_eph <- anova.cca(rda_eph_2)$Df 
+
+set.seed(222)
+Df_ple <- anova.cca(rda_ple_2)$Df 
+
+set.seed(222)
+Df_tri <- anova.cca(rda_tri_2)$Df 
+
+set.seed(222)
+Df_dip <- anova.cca(rda_dip_2)$Df 
+
+set.seed(222)
+Df_spi <- anova.cca(rda_spi_2)$Df  
+
+Model_residual <- c(rep(c("model", "residual"), 6))
+
+results_eme <- cbind(Df, Variance, F, p_value, adj_r_2)
+results_eph <- cbind(Df_eph, Variance_eph, F_eph, p_value_eph, adj_r_2_eph)
+results_ple <- cbind(Df_ple, Variance_ple, F_ple, p_value_ple, adj_r_2_ple)
+results_tri <- cbind(Df_tri, Variance_tri, F_tri, p_value_tri, adj_r_2_tri)
+results_dip <- cbind(Df_dip, Variance_dip, F_dip, p_value_dip, adj_r_2_dip)
+results_spi <- cbind(Df_spi, Variance_spi, F_spi, p_value_spi, adj_r_2_spi)
+
+results_rda <- rbind(results_eme, results_eph, results_ple, 
+                     results_tri, results_dip, results_spi)
+results_rda <- cbind(Model_residual, results_rda)
+results_rda <- cbind(rda_names, results_rda)
+
+results_rda <- as.data.frame(results_rda)
+
+#write.csv(results_rda, "results_rda.csv", row.names = FALSE)
+```
+
+
+## Plot RDA
+### Total FA
+First rough plot
+```{r}
+plot(rda_3, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc <- scores(rda_3, choices = 1:2, scaling = "symmetric", display = "sites")
+fa_sc <- scores(rda_3, choices = 1:2, scaling = "symmetric", display = "species")
+va_sc <- scores(rda_3, choices = 1:2, scaling = "symmetric", display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc <- cbind(si_sc, rda_env)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc <- as.data.frame(fa_sc)
+
+fa_sc$FA <- rownames(fa_sc)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc)
+
+va_sc_names <- c("EC", "pool", "oxy", "temp", "shad")
+
+va_sc <- cbind(va_sc, va_sc_names)
+
+va_sc <- as.data.frame(va_sc)
+
+va_sc$RDA1 <- as.numeric(va_sc$RDA1)
+
+va_sc$RDA2 <- as.numeric(va_sc$RDA2)
+```
+
+
+Explained variance by first axis
+```{r}
+round(summary(rda_3)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_3)$cont$importance[2,2]*100)
+```
+
+Plot
+```{r}
+rda_total_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc[1,1]*3, yend=va_sc[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc[2,1]*3, yend=va_sc[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc[3,1]*3, yend=va_sc[3,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc[4,1]*3, yend=va_sc[4,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc[5,1]*3, yend=va_sc[5,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc[c(3,5),],
+           aes(x=RDA1*3+0.15,y=RDA2*3,label=va_sc_names)) +
+  geom_text(data = va_sc[c(1,2,4),],
+           aes(x=RDA1*3-0.15,y=RDA2*3,label=va_sc_names)) +
+  geom_text(data = fa_sc,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Total fatty acids", 
+       x=expression(RDA1 ~ "*" ~"("~7~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~4~"%"~ total~ variance~ ")")) 
+```
+
+### Ephemeroptera
+First rough plot
+```{r}
+plot(rda_eph_3, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc_eph <- scores(rda_eph_3, choices = 1:2, scaling = "symmetric", 
+                    display = "sites")
+fa_sc_eph <- scores(rda_eph_3, choices = 1:2, scaling = "symmetric", 
+                display = "species")
+va_sc_eph <- scores(rda_eph_3, choices = 1:2, scaling = "symmetric", 
+                display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc_eph <- cbind(si_sc_eph, rda_env_eph)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc_eph <- as.data.frame(fa_sc_eph)
+
+fa_sc_eph$FA <- rownames(fa_sc_eph)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc_eph)
+
+va_sc_names_eph <- c("EC", "PO4", "NO3", "tox")
+
+va_sc_eph <- cbind(va_sc_eph, va_sc_names_eph)
+
+va_sc_eph <- as.data.frame(va_sc_eph)
+
+va_sc_eph$RDA1 <- as.numeric(va_sc_eph$RDA1)
+
+va_sc_eph$RDA2 <- as.numeric(va_sc_eph$RDA2)
+```
+
+Explained variance by first axis
+```{r}
+round(summary(rda_eph_3)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_eph_3)$cont$importance[2,2]*100)
+```
+
+Plot
+```{r}
+rda_eph_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc_eph, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_eph[1,1]*3, yend=va_sc_eph[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_eph[2,1]*3, yend=va_sc_eph[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_eph[3,1]*3, yend=va_sc_eph[3,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_eph[4,1]*3, yend=va_sc_eph[4,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc_eph,
+           aes(x=RDA1*3+0.2,y=RDA2*3,label=va_sc_names_eph)) +
+  geom_text(data = fa_sc_eph,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Mayflies (Ephemeroptera)", 
+       x=expression(RDA1 ~"("~6~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~4~"%"~ total~ variance~ ")"))
+```
+
+### Plecoptera
+
+First rough plot
+```{r}
+plot(rda_ple_4, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc_ple <- scores(rda_ple_4, choices = 1:2, scaling = "symmetric", 
+                    display = "sites")
+fa_sc_ple <- scores(rda_ple_4, choices = 1:2, scaling = "symmetric", 
+                display = "species")
+va_sc_ple <- scores(rda_ple_4, choices = 1:2, scaling = "symmetric", 
+                display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc_ple <- cbind(si_sc_ple, rda_env_ple)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc_ple <- as.data.frame(fa_sc_ple)
+
+fa_sc_ple$FA <- rownames(fa_sc_ple)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc_ple)
+
+va_sc_names_ple <- c("PO4", "shad")
+
+va_sc_ple <- cbind(va_sc_ple, va_sc_names_ple)
+
+va_sc_ple <- as.data.frame(va_sc_ple)
+
+va_sc_ple$RDA1 <- as.numeric(va_sc_ple$RDA1)
+
+va_sc_ple$RDA2 <- as.numeric(va_sc_ple$RDA2)
+```
+
+Explained variance by first axis
+```{r}
+round(summary(rda_ple_4)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_ple_4)$cont$importance[2,2]*100)
+```
+
+Plot
+```{r}
+rda_ple_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc_ple, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_ple[1,1]*3, yend=va_sc_ple[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_ple[2,1]*3, yend=va_sc_ple[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc_ple,
+           aes(x=RDA1*3,y=RDA2*3+0.08,label=va_sc_names_ple)) +
+  geom_text(data = fa_sc_ple,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Stoneflies (Plecoptera)", 
+       x=expression(RDA1 ~"("~14~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~8~"%"~ total~ variance~ ")")) +
+  xlim(c(-2,2))
+```
+
+
+### Trichoptera
+First rough plot
+```{r}
+plot(rda_tri_4, scaling = "symmetric")
+```
+
+First rough plot
+```{r}
+plot(rda_tri_4, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc_tri <- scores(rda_tri_4, choices = 1:2, scaling = "symmetric", 
+                    display = "sites")
+fa_sc_tri <- scores(rda_tri_4, choices = 1:2, scaling = "symmetric", 
+                display = "species")
+va_sc_tri <- scores(rda_tri_4, choices = 1:2, scaling = "symmetric", 
+                display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc_tri <- cbind(si_sc_tri, rda_env_tri)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc_tri <- as.data.frame(fa_sc_tri)
+
+fa_sc_tri$FA <- rownames(fa_sc_tri)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc_tri)
+
+va_sc_names_tri <- c("pool", "tox", "shad")
+
+va_sc_tri <- cbind(va_sc_tri, va_sc_names_tri)
+
+va_sc_tri <- as.data.frame(va_sc_tri)
+
+va_sc_tri$RDA1 <- as.numeric(va_sc_tri$RDA1)
+
+va_sc_tri$RDA2 <- as.numeric(va_sc_tri$RDA2)
+```
+
+Explained variance by first axis
+```{r}
+round(summary(rda_tri_4)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_tri_4)$cont$importance[2,2]*100)
+```
+
+Plot
+```{r}
+rda_tri_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc_tri, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_tri[1,1]*3, yend=va_sc_tri[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_tri[2,1]*3, yend=va_sc_tri[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_tri[3,1]*3, yend=va_sc_tri[3,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc_tri[2,],
+           aes(x=RDA1*3-0.08,y=RDA2*3,label=va_sc_names_tri)) +
+  geom_text(data = va_sc_tri[c(1),],
+           aes(x=RDA1*3-0.21,y=RDA2*3,label=va_sc_names_tri)) +
+   geom_text(data = va_sc_tri[c(3),],
+           aes(x=RDA1*3-0.21,y=RDA2*3+0.05,label=va_sc_names_tri)) +
+  geom_text(data = fa_sc_tri,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Caddisflies (Trichoptera)", 
+       x=expression(RDA1 ~ "*" ~"("~7~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~2~"%"~ total~ variance~ ")")) +
+  xlim(c(-2,1))
+```
+
+### Diptera (Chironomidae)
+First rough plot
+```{r}
+plot(rda_dip_3, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc_dip <- scores(rda_dip_3, choices = 1:2, scaling = "symmetric", 
+                    display = "sites")
+fa_sc_dip <- scores(rda_dip_3, choices = 1:2, scaling = "symmetric", 
+                display = "species")
+va_sc_dip <- scores(rda_dip_3, choices = 1:2, scaling = "symmetric", 
+                display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc_dip <- cbind(si_sc_dip, rda_env_dip)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc_dip <- as.data.frame(fa_sc_dip)
+
+fa_sc_dip$FA <- rownames(fa_sc_dip)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc_dip)
+
+va_sc_names_dip <- c("oxy", "pool", "PO4", "EC", "NO3", "temp", "shad")
+
+va_sc_dip <- cbind(va_sc_dip, va_sc_names_dip)
+
+va_sc_dip <- as.data.frame(va_sc_dip)
+
+va_sc_dip$RDA1 <- as.numeric(va_sc_dip$RDA1)
+
+va_sc_dip$RDA2 <- as.numeric(va_sc_dip$RDA2)
+```
+
+Explained variance by first axis
+```{r}
+round(summary(rda_dip_3)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_dip_3)$cont$importance[2,2]*100)
+```
+
+Plot
+```{r}
+rda_dip_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc_dip, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_dip[1,1]*3, yend=va_sc_dip[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_dip[2,1]*3, yend=va_sc_dip[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_dip[3,1]*3, yend=va_sc_dip[3,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_dip[4,1]*3, yend=va_sc_dip[4,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+   geom_segment(aes(x=0, y=0, xend=va_sc_dip[5,1]*3, yend=va_sc_dip[5,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+   geom_segment(aes(x=0, y=0, xend=va_sc_dip[6,1]*3, yend=va_sc_dip[6,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+   geom_segment(aes(x=0, y=0, xend=va_sc_dip[7,1]*3, yend=va_sc_dip[7,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc_dip[c(1),],
+           aes(x=RDA1*3+0.15,y=RDA2*3,label=va_sc_names_dip)) +
+  geom_text(data = va_sc_dip[c(3,7),],
+           aes(x=RDA1*3+0.18,y=RDA2*3,label=va_sc_names_dip)) +
+  geom_text(data = va_sc_dip[c(2,4),],
+           aes(x=RDA1*3,y=RDA2*3+0.08,label=va_sc_names_dip)) +
+  geom_text(data = va_sc_dip[c(5),],
+           aes(x=RDA1*3+0.15,y=RDA2*3,label=va_sc_names_dip)) +
+  geom_text(data = va_sc_dip[c(6),],
+           aes(x=RDA1*3+0.25,y=RDA2*3,label=va_sc_names_dip)) +
+  geom_text(data = fa_sc_dip,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Flies (Diptera)", 
+       x=expression(RDA1 ~ "*" ~"("~14~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~6~"%"~ total~ variance~ ")"))
+```
+
+
+### Spiders
+First rough plot
+```{r}
+plot(rda_spi_3, scaling = "symmetric")
+```
+
+Preparation for nicer plot
+```{r, message=FALSE, warning=FALSE}
+si_sc_spi <- scores(rda_spi_3, choices = 1:2, scaling = "symmetric", 
+                    display = "sites")
+fa_sc_spi <- scores(rda_spi_3, choices = 1:2, scaling = "symmetric", 
+                display = "species")
+va_sc_spi <- scores(rda_spi_3, choices = 1:2, scaling = "symmetric", 
+                display = "bp")
+```
+
+Add env. variables to site scores
+```{r, message=FALSE, warning=FALSE}
+si_sc_spi <- cbind(si_sc_spi, rda_env_spi)
+```
+
+Add FA names to FA scores
+```{r, message=FALSE, warning=FALSE}
+fa_sc_spi <- as.data.frame(fa_sc_spi)
+
+fa_sc_spi$FA <- rownames(fa_sc_spi)
+```
+
+Add variable names to variable scores and numbers to numeric
+```{r, message=FALSE, warning=FALSE}
+rownames(va_sc_spi)
+
+va_sc_names_spi <- c("PO4", "temp", "NO3", "shad")
+
+va_sc_spi <- cbind(va_sc_spi, va_sc_names_spi)
+
+va_sc_spi <- as.data.frame(va_sc_spi)
+
+va_sc_spi$RDA1 <- as.numeric(va_sc_spi$RDA1)
+
+va_sc_spi$RDA2 <- as.numeric(va_sc_spi$RDA2)
+```
+
+Explained variance by first axis
+```{r}
+round(summary(rda_spi_3)$cont$importance[2,1]*100)
+```
+
+Explained variance by second axis
+```{r}
+round(summary(rda_spi_3)$cont$importance[2,2]*100)
+```
+
+
+Plot
+```{r}
+rda_spi_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom",
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20),  
+        axis.text.x = element_text(size = 15), 
+        axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  scale_color_manual(values = c("deepskyblue", "chartreuse4")) +
+  scale_fill_manual(values = c("deepskyblue", "chartreuse4")) +
+  geom_point(data = si_sc_spi, 
+             aes(x=RDA1, y=RDA2, col = position,
+                 fill = position),
+             show.legend = TRUE, size=5, stroke = 1.5,
+             alpha = 0.5) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_spi[1,1]*3, yend=va_sc_spi[1,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_spi[2,1]*3, yend=va_sc_spi[2,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_spi[3,1]*3, yend=va_sc_spi[3,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_segment(aes(x=0, y=0, xend=va_sc_spi[4,1]*3, yend=va_sc_spi[4,2]*3), 
+               arrow = arrow(length=unit(.5, 'cm'))) +
+  geom_text(data = va_sc_spi[1:2,],
+           aes(x=RDA1*3-0.15,y=RDA2*3,label=va_sc_names_spi)) +
+  geom_text(data = va_sc_spi[3:4,],
+           aes(x=RDA1*3,y=RDA2*3-0.03,label=va_sc_names_spi)) +
+  geom_text(data = fa_sc_spi,
+           aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
+  labs(title = "Spiders (Araneae)", 
+       x=expression(RDA1 ~"("~6~"%"~ total~ variance~ ")"),
+       y=expression(RDA2 ~"("~5~"%"~ total~ variance~ ")"))+
+  xlim(c(-1.5,2))
+```
+
+### Save plot
+```{r, message=FALSE, warning=FALSE}
+plot_rda <- ggarrange(rda_total_plot, 
+                     rda_dip_plot, rda_eph_plot,
+                     rda_ple_plot, rda_tri_plot,
+                     rda_spi_plot,
+                  labels = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"),
+                  font.label = list(face = "bold"),
+                  ncol = 2, nrow = 3, 
+                  common.legend = TRUE, legend = "bottom")
+
+#png("rda_plot.png", width=10, height=15, units="in", res=300)
+plot_rda
+#dev.off()
+```
+
+
+# HGAM for FA export of emergence
+## Prepare data
+
+* total_fa: Sum of all single FA per dry weight of organism (microgramm FA per milligram dry mass)
+
+* dry_weight_mg: Weight of sample, in which FA were analysed
+
+Sum up dry pufa per period 
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam <- select(fa_emergence_1, 
+                            c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa", "season"))
+
+fa_emergence_hgam <- distinct(fa_emergence_hgam)
+```
+
+Modenbach agriculture Plecoptera B two measurements: Take mean FA 
+```{r, message=FALSE, warning=FALSE}
+fa_mod_agri_plec_b <- filter(fa_emergence_hgam, 
+                             stream == "Modenbach" & 
+                               position == "agriculture" & 
+                               order == "Plecoptera" & 
+                               period == "B")
+
+fa_mod_agri_plec_b <- ddply(fa_mod_agri_plec_b, 
+                             c("stream", "position", "order", "period",
+                              "dry_weight_mg", "season"),
+                            summarise,
+                            total_fa = mean(total_fa))
+
+
+fa_emergence_hgam <- fa_emergence_hgam[-c(361, 362),]
+
+fa_emergence_hgam <- rbind(fa_emergence_hgam, fa_mod_agri_plec_b)
+
+```
+
+Calculate amount of FA in sample
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam$weight_FA <- with(fa_emergence_hgam, total_fa*dry_weight_mg)
+```
+
+Get samples, where emergence was 0 and therefore no FA 
+
+Kropsbach agriculture E: No sample taken, because traps broken, so NA
+```{r, message=FALSE, warning=FALSE}
+no_emergence <- read.table("4_no_emergence.csv",
+                                             header = TRUE, sep = ",",
+                                             na.strings = c("NR", "NA"),
+                                             stringsAsFactors = TRUE)
+```
+
+In other format
+```{r, message=FALSE, warning=FALSE}
+no_emergence <- reshape2::melt(no_emergence, 
+                               id.vars = c("stream", "position", "order"))
+```
+
+Remove NA
+```{r, message=FALSE, warning=FALSE}
+no_emergence <- filter(no_emergence, !is.na(value))
+```
+
+Remove column variable and rename column value
+```{r, message=FALSE, warning=FALSE}
+no_emergence <- select(no_emergence, -c("variable"))
+
+names(no_emergence)[4] <- "period"
+```
+
+Add column dry_weight_mg, total_fa, weight_FA
+```{r, message=FALSE, warning=FALSE}
+no_emergence$dry_weight_mg <- 0
+no_emergence$total_fa <- 0
+no_emergence$season <- with(no_emergence, ifelse(period %in% spring, "spring",
+                                              ifelse(period %in% summer, "summer",
+                                              ifelse(period %in% autumn, "autumn",
+                                                     "spring_summer"))))
+no_emergence$weight_FA <- 0
+```
+
+Bind no_emergence and fa_emergence_hgam
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam <- rbind(fa_emergence_hgam, no_emergence)
+```
+
+Add date to samples:
+* 18 March - 1 April: A
+* 2 - 15 April: B
+* 16 - 29 April: C
+* 30 April - 13 May: D
+* 14 - 16 May: E
+
+* 17 - 29 May: F
+* 30 May - 13 June: G
+* 14 - 27 June: H
+* 28 June - 11 July: I
+* 12 - 26 July: J
+
+* 27 July - 12 August: K
+* 13 - 26 August: L
+* 27 August - 9 September: M
+* 10 - 13 September: N
+
+```{r, message=FALSE, warning=FALSE}
+unique(fa_emergence_hgam$period)
+
+fa_emergence_hgam$date <- with(fa_emergence_hgam, 
+                                     ifelse(period == "A", "2018-03-18 2018-04-01",
+                                     ifelse(period == "B", "2018-04-02 2018-04-15",
+                                     ifelse(period == "C", "2018-04-16 2018-04-29",
+                                     ifelse(period == "D", "2018-04-30 2018-05-13",
+                                     ifelse(period == "E", "2018-05-14 2018-05-16",
+                                     ifelse(period == "F", "2018-05-17 2018-05-29",
+                                     ifelse(period == "G", "2018-05-30 2018-06-13",
+                                     ifelse(period == "H", "2018-06-14 2018-06-27",
+                                     ifelse(period == "I", "2018-06-28 2018-07-11",
+                                     ifelse(period == "J", "2018-02-12 2018-07-26",
+                                     ifelse(period == "K", "2018-07-27 2018-08-12",
+                                     ifelse(period == "L", "2018-08-12 2018-08-26",
+                                     ifelse(period == "M", "2018-08-27 2018-09-09",
+                                     ifelse(period == "N", "2018-09-10 2018-09-13",
+                                     ifelse(period == "E-F", "2018-05-14 2018-05-29",
+                                     ifelse(period == "M-N", "2018-08-27 2018-09-13",
+                                     ifelse(period == "I-J", "2018-06-28 2018-07-26",
+                                     ifelse(period == "K-L", "2018-07-27 2018-08-26",
+                                     ifelse(period == "F-G", "2018-05-17 2018-06-13",
+                                     ifelse(period == "D-E", "2018-04-30 2018-05-16",
+                                     ifelse(period == "K-N", "2018-07-27 2018-09-13",
+                                     ifelse(period == "A-B", "2018-03-18 2018-04-15",
+                                     ifelse(period == "F-J", "2018-05-17 2018-07-26",
+                                     ifelse(period == "G-H", "2018-05-30 2018-07-27",
+                                     ifelse(period == "L-N", "2018-08-13 2018-09-13",
+                                     ifelse(period == "G-J", "2018-05-30 2018-07-26",
+                                     ifelse(period == "L-M", "2018-08-13 2018-09-09",
+                                     ifelse(period == "H-I", "2018-06-14 2018-07-11",
+                                     ifelse(period == "B-C", "2018-04-02 2018-04-29",
+                                     ifelse(period == "F-H", "2018-05-17 2018-06-27",
+                                     ifelse(period == "H-J", "2018-06-14 2018-07-26",
+                                     ifelse(period == "K-M", "2018-07-27 2018-09-09",
+                                     ifelse(period == "C-D", "2018-04-16 2018-05-13",
+                                     ifelse(period == "F-I", "2018-05-17 2018-07-11",
+                                     ifelse(period == "C-E", "2018-04-16 2018-05-16",
+                                            NA))))))))))))))))))))))))))))))))))))
+
+unique(fa_emergence_hgam$date)
+
+fa_emergence_hgam <- separate(fa_emergence_hgam, col = date , 
+                              into = c("begin_date", "end_date"), 
+                              sep = " ", remove = TRUE)
+
+fa_emergence_hgam$begin_date <- as.Date(fa_emergence_hgam$begin_date,
+                                        format = "%Y-%m-%d")
+fa_emergence_hgam$end_date <- as.Date(fa_emergence_hgam$end_date,
+                                       format = "%Y-%m-%d")
+
+str(fa_emergence_hgam)
+```
+
+Load data for collection days and area of emergence collection
+
+The biomass of emergence was used in the publication: Land use changes biomass and temporal patterns of insect cross-ecosystem flows of Ohler et al. (2023) (https://doi.org/10.1111/gcb.16462). The raw data of the biomass and the R script how the biomass was obtained are available under: https://doi.org/10.5281/zenodo.7123464 
+
+```{r, message=FALSE, warning=FALSE}
+order_emergence <- read.table("5_biomass_emergence_family_sample.csv",
+                                             header = TRUE, sep = ",",
+                                             na.strings = c("NR", "NA"),
+                                             stringsAsFactors = TRUE)
+```
+
+Rename vine in agriculture
+```{r, message=FALSE, warning=FALSE}
+order_emergence$position <- gsub("vine", "agriculture", order_emergence$position)
+```
+
+Remove observations, where biomass = 0, because there no FA were measured and therefore the collection days are not included in calculation of FA export per area and time 
+```{r, message=FALSE, warning=FALSE}
+order_emergence_hgam <- filter(order_emergence, 
+                                       biomass_sample != 0)
+```
+
+Chose only Chironomidae of Diptera
+```{r, message=FALSE, warning=FALSE}
+order_emergence_hgam <- filter(order_emergence_hgam, 
+                          family == "Chironomidae" | 
+                          order %in% c("Ephemeroptera", "Plecoptera", "Trichoptera"))
+```
+
+Add time periods A, B, ... N to data
+```{r, message=FALSE, warning=FALSE}
+order_emergence_hgam$time <- as.Date(order_emergence_hgam$time, format = "%Y-%m-%d")
+
+order_emergence_hgam$period <- with(order_emergence_hgam, 
+                   ifelse(time > "2018-03-17" & time <= "2018-04-01", "A", 
+                   ifelse(time > "2018-04-01" & time <= "2018-04-15", "B",
+                   ifelse(time > "2018-04-15" & time <= "2018-04-29", "C",
+                   ifelse(time > "2018-04-29" & time <= "2018-05-13", "D",
+                   ifelse(time > "2018-05-13" & time <= "2018-05-16", "E",
+                   ifelse(time > "2018-05-16" & time <= "2018-05-29", "F",
+                   ifelse(time > "2018-05-29" & time <= "2018-06-13", "G",
+                   ifelse(time > "2018-06-13" & time <= "2018-06-27", "H",
+                   ifelse(time > "2018-06-27" & time <= "2018-07-11", "I",
+                   ifelse(time > "2018-07-11" & time <= "2018-07-26", "J",
+                   ifelse(time > "2018-07-26" & time <= "2018-08-12", "K",
+                   ifelse(time > "2018-08-12" & time <= "2018-08-26", "L",
+                   ifelse(time > "2018-08-26" & time <= "2018-09-09", "M",
+                   ifelse(time > "2018-09-09" & time <= "2018-09-13", "N",       
+                          "X")))))))))))))))
+```
+
+Sum up collection days per period and trap
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period <- ddply(order_emergence_hgam, 
+                        c("stream", "position", "trap", "area_trap",
+                          "period", "order"),
+                        summarise,
+                        collection_days_period = sum(collection_days, 
+                                                     na.rm = TRUE))
+```
+
+Sum up area per period and collection_days_period (if same number collection days in both traps, then only one value per area_period, if not then two values)
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period <- ddply(order_trap_days_period, 
+                        c("stream", "position",
+                          "period", "collection_days_period", "order"),
+                        summarise,
+                        area_period = sum(area_trap, na.rm = TRUE))
+
+unique(order_trap_days_period$area_period)
+```
+
+Filter for area_period = 0.25, because here only one trap deployed 
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period_differ <- filter(order_trap_days_period, 
+                                        area_period == 0.25)
+```
+
+Get cases with two values for collection_days_period are available because traps were deployed for different time points 
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period_differ_1 <- reshape2::melt(order_trap_days_period_differ, 
+                      id.vars = c("stream", "position", "period", "order",
+                                  "area_period"))
+
+order_trap_days_period_differ_1 <- reshape2::dcast(order_trap_days_period_differ_1,
+                                stream + position + period + order + area_period
+                              ~ variable,
+                              value.var = "value")
+
+order_trap_days_period_differ_1 <- filter(order_trap_days_period_differ_1,
+                                        collection_days_period == 2)
+
+names(order_trap_days_period_differ_1)[6] <- "traps_differ"
+
+
+order_trap_days_period_differ <- left_join(order_trap_days_period_differ, order_trap_days_period_differ_1,
+                  by = c("stream", "position", "period", "order", "area_period"))
+
+order_trap_days_period_differ <- filter(order_trap_days_period_differ, !is.na(traps_differ))
+
+order_trap_days_period_differ <- order_trap_days_period_differ[order(order_trap_days_period_differ$stream,
+                                            order_trap_days_period_differ$position,
+                                            order_trap_days_period_differ$period,
+                                            order_trap_days_period_differ$order,
+                                            order_trap_days_period_differ$area_period,
+                                            order_trap_days_period_differ$traps_differ,
+                                            order_trap_days_period_differ$collection_days_period),]
+
+order_trap_days_period_differ$a_b <- rep(c("a", "b"), 286)
+```
+
+Calculate number of days only one trap was deployed
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period_differ <- reshape2::dcast(order_trap_days_period_differ, 
+                        stream + position + period + order + 
+                          area_period + traps_differ ~ a_b,
+                        value.var = "collection_days_period")
+
+order_trap_days_period_differ$collection_days_1_trap <- with(order_trap_days_period_differ, b-a) # b longer time period than a
+
+names(order_trap_days_period_differ)[7] <- "collection_days_2_traps"
+```
+
+Calculate area_period * collection_days
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period_differ$area_collection_days_period_1_trap <- 
+  0.25 * order_trap_days_period_differ$collection_days_1_trap
+
+order_trap_days_period_differ$area_collection_days_period_2_traps <- 
+  0.5 * order_trap_days_period_differ$collection_days_2_traps
+
+order_trap_days_period_differ$area_collection_days <- with(order_trap_days_period_differ, area_collection_days_period_1_trap + area_collection_days_period_2_traps)
+
+# here for case where two traps were deployed same duration or if only one trap was deployed, so remove cases where 2 traps deployed different duration within period
+
+order_trap_days_period$area_collection_days <- with(order_trap_days_period, area_period*collection_days_period)
+
+remove_from_order_trap_days_period <- unite(order_trap_days_period_differ,
+                                            "remove", "stream", "position", "period",
+                                            "order")
+remove_from_order_trap_days_period <- remove_from_order_trap_days_period$remove
+
+order_trap_days_period <- unite(order_trap_days_period,
+                                            "remove", "stream", "position", "period",
+                                            "order", remove = FALSE)
+
+
+order_trap_days_period <- filter(order_trap_days_period, remove %notin% remove_from_order_trap_days_period)
+```
+
+Table with area_collection_days
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period <- select(order_trap_days_period, 
+                                 c("stream",
+                                   "position", "period", "order", 
+                                   "area_collection_days"))
+
+order_trap_days_period_differ <- select(order_trap_days_period_differ, 
+                                 c("stream",
+                                   "position", "period", "order", 
+                                   "area_collection_days"))
+
+order_trap_days_period <- rbind(order_trap_days_period, order_trap_days_period_differ)
+```
+
+Add pooled periods to data
+```{r, message=FALSE, warning=FALSE}
+unique(fa_emergence_hgam$period)
+
+A_B <- filter(order_trap_days_period, period %in% c("A", "B"))
+B_C <- filter(order_trap_days_period, period %in% c("B", "C"))
+C_D <- filter(order_trap_days_period, period %in% c("C", "D"))
+C_E <- filter(order_trap_days_period, period %in% c("C", "D", "E"))
+D_E <- filter(order_trap_days_period, period %in% c("D", "E"))
+E_F <- filter(order_trap_days_period, period %in% c("E", "F"))
+F_G <- filter(order_trap_days_period, period %in% c("F", "G"))
+F_H <- filter(order_trap_days_period, period %in% c("F", "G", "H"))
+F_I <- filter(order_trap_days_period, period %in% c("F", "G", "H", "I"))
+F_J <- filter(order_trap_days_period, period %in% c("F", "G", "H", "I", "J"))
+G_H <- filter(order_trap_days_period, period %in% c("G", "H"))
+G_J <- filter(order_trap_days_period, period %in% c("G", "H", "I", "J"))
+H_I <- filter(order_trap_days_period, period %in% c("H", "I"))
+H_J <- filter(order_trap_days_period, period %in% c("H", "I", "J"))
+I_J <- filter(order_trap_days_period, period %in% c("I", "J"))
+K_L <- filter(order_trap_days_period, period %in% c("K", "L"))
+K_M <- filter(order_trap_days_period, period %in% c("K", "L", "M"))
+K_N <- filter(order_trap_days_period, period %in% c("K", "L", "M", "N"))
+L_M <- filter(order_trap_days_period, period %in% c("L", "M"))
+L_N <- filter(order_trap_days_period, period %in% c("L", "M", "N"))
+M_N <- filter(order_trap_days_period, period %in% c("M", "N"))
+
+A_B$period <- "A-B"
+B_C$period <- "B-C"
+C_D$period <- "C-D"
+C_E$period <- "C-E"
+D_E$period <- "D-E"
+E_F$period <- "E-F"
+F_G$period <- "F-G"
+F_H$period <- "F-H"
+F_I$period <- "F-I"
+F_J$period <- "F-J"
+G_H$period <- "G-H"
+G_J$period <- "G-J"
+H_I$period <- "H-I"
+H_J$period <- "H-J"
+I_J$period <- "I-J"
+K_L$period <- "K-L"
+K_M$period <- "K-M"
+K_N$period <- "K-N"
+L_M$period <- "L-M"
+L_N$period <- "L-N"
+M_N$period <- "M-N"
+
+order_pooled_periods <- rbind(A_B, B_C, C_D, C_E, D_E, E_F, F_G, F_H, F_I, F_J, G_H,
+                        G_J, H_I, H_J, I_J, K_L, K_M, K_N, L_M, L_N, M_N)
+```
+
+Sum up area_collection_days per pooled period
+```{r, message=FALSE, warning=FALSE}
+order_pooled_periods <- ddply(order_pooled_periods, 
+                        c("stream", "position", "period", "order"),
+                        summarise,
+                        area_collection_days_pooled_period =
+                          sum(area_collection_days, na.rm = TRUE))
+
+names(order_pooled_periods)[5] <- "area_collection_days"
+```
+
+Bind pooled periods to trap_days_period
+```{r, message=FALSE, warning=FALSE}
+order_trap_days_period <- rbind(order_trap_days_period, order_pooled_periods)
+```
+
+Bind FA and trap days data
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam$stream <- as.factor(fa_emergence_hgam$stream)
+fa_emergence_hgam$position <- as.factor(fa_emergence_hgam$position)
+fa_emergence_hgam$order <- as.factor(fa_emergence_hgam$order)
+fa_emergence_hgam$period <- as.factor(fa_emergence_hgam$period)
+
+order_trap_days_period$position <- as.factor(order_trap_days_period$position)
+order_trap_days_period$period <- as.factor(order_trap_days_period$period)
+
+fa_emergence_hgam <- left_join(fa_emergence_hgam, order_trap_days_period, 
+                  by = c("stream", "position", "order", "period"))
+```
+
+Get day of the year (convert date into day of year) for HGAM
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam$day <- yday(fa_emergence_hgam$end_date)
+```
+
+Get export FA per area and collection days
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam$fa_area_day <- with(fa_emergence_hgam, 
+                                      ifelse(weight_FA == 0, 0,
+                                      weight_FA/(area_collection_days)))
+```
+
+Get column with information about position and order
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam <- unite(fa_emergence_hgam, "pos_ord", "position", "order", 
+                           sep = "_", remove = FALSE)
+
+```
+
+Sum up to total_fa
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_total_hgam <- ddply(fa_emergence_hgam, 
+                             c("stream", "position", "period",
+                               "season", "begin_date", "end_date", "day"),
+                            summarise,
+                            fa_area_day = sum(fa_area_day))
+```
+
+Chr in factor
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam$pos_ord <- as.factor(fa_emergence_hgam$pos_ord)
+```
+
+```{r, message=FALSE, warning=FALSE}
+count_plecoptera <- filter(fa_emergence_hgam, order == "Plecoptera")
+
+count_plecoptera <- filter(count_plecoptera, total_fa != 0)
+
+count_plecoptera_agriculture <- filter(count_plecoptera, 
+                                       position == "agriculture")
+
+count_plecoptera_forest <- filter(count_plecoptera, 
+                                       position == "forest")
+```
+
+```{r, message=FALSE, warning=FALSE}
+#write.csv(fa_emergence_hgam, "fa_emergence_hgam_2.csv")
+
+#write.csv(fa_emergence_total_hgam, "fa_emergence_total_hgam_2.csv")
+```
+
+## Load packages
+```{r, message=FALSE, warning=FALSE}
+library(mgcv)
+library(gratia)
+```
+
+## Fit HGAM for land use (forest, agriculture)
+
+* gaussian is no suitable distribution (too many zeros)
+
+* The Tweedie distribution is a special case of an exponential distribution. It can have a cluster of data items at zero (called a “point mass”), which is particularly useful where there is a mixture of zeros and non-negative data points. Basically, if you see a histogram with a spike at zero, it’s a possible candidate to be fitted to a Tweedie model.
+
+* Original References: Tweedie, M. C. K. (1984). An index which distinguishes between some important exponential families. In Statistics: Applications and New Directions. Proceedings of the Indian Statistical Institute Golden Jubilee International Conference. (Eds. J. K. Ghosh and J. Roy), pp. 579-604. Calcutta: Indian Statistical Institute.
+
+* Fitted without global smoother
+
+* position = land use
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#fa_position_S <- gam(fa_area_day ~ s(day, position, bs = "fs")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(fa_position_S, file="fa_position_S.RData")
+load("6_fa_position_S.RData")
+
+BIC(fa_position_S)
+summary(fa_position_S)
+
+draw(fa_position_S)
+
+par(mfrow = c(2,2))
+gam.check(fa_position_S)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#fa_position_I <- gam(fa_area_day ~ s(day, by = position, bs = "cc")+
+#             s(position, bs = "re")+
+#             s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(fa_position_I, file="fa_position_I.RData")
+load("7_fa_position_I.RData")
+
+BIC(fa_position_S, fa_position_I) # fa_position_S is better model than models without similar group-level trends
+summary(fa_position_I)
+
+draw(fa_position_I)
+
+par(mfrow = c(2,2))
+gam.check(fa_position_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+
+### Effect size: Difference between mean fit
+
+Use difference between mean fit of vine and forest as effect size and calculate its 95 % CI
+
+* $X$: Mean fit of FA export for agricultural and forested sites
+* $\sigma$: Standard devation of mean fit
+* $se$: Standard error of mean fit
+* $N$: Number observations
+
+$$ CI_{95} = (X_{agriculture} - X_{forest}) ± 1.959964 \sqrt {\frac {\sigma_{agriculture}^2} {N_{agriculture}} + {\frac {\sigma_{forest}^2} {N_{forest}}}}$$
+
+$$ se = \frac {\sigma} {\sqrt N}  $$
+
+
+$$ se^2 = \frac {\sigma^2} {N}  $$
+
+$$ CI_{95} = (X_{agriculture} - X_{forest}) ± 1.959964 \sqrt {se_{agriculture}^2 + se_{forest}^2}$$
+
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_pred <- with(fa_emergence_total_hgam,
+                      expand.grid(day=seq(min(day), max(day), length=100),
+                                  stream=levels(stream), 
+                      position=levels((position))))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_pred <- cbind(fa_position_S_pred,
+                       predict(fa_position_S, 
+                               fa_position_S_pred, 
+                               se.fit=TRUE,
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing.
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat <- filter(fa_position_S_pred, stream == "Dierbach")
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat_fit <- reshape2::dcast(fa_position_S_stat, day + stream
+                                          ~ position, value.var="fit")
+names(fa_position_S_stat_fit)[3:4] <- c("fit_forest", "fit_agriculture")
+
+fa_position_S_stat_se <- reshape2::dcast(fa_position_S_stat, day + stream
+                                       ~ position, value.var="se.fit")
+names(fa_position_S_stat_se)[3:4] <- c("se_forest", "se_agriculture")
+
+fa_position_S_stat <- left_join(fa_position_S_stat_fit, fa_position_S_stat_se, by = c("day", "stream"))
+```
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$crit <- with(fa_position_S_stat, 1.959964)
+```
+Calculate difference between fit of vine and forest
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$diff_a_f <- with(fa_position_S_stat, fit_agriculture - fit_forest)
+```
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$sum_a_f <- with(fa_position_S_stat, (se_agriculture^2) +
+                                     (se_forest^2))
+```
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$sqrt_a_f <- with(fa_position_S_stat, sqrt(sum_a_f))
+```
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$upper <- with(fa_position_S_stat, diff_a_f + crit*sqrt_a_f)
+```
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$lower <- with(fa_position_S_stat, diff_a_f - crit*sqrt_a_f)
+```
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat$sig <- with(fa_position_S_stat, between(rep(0, 100), lower, upper)) # True means 0 included in CI, so not significant
+fa_position_S_stat$sig <- gsub("FALSE","significant", fa_position_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_stat <- reshape2::melt(fa_position_S_stat, 
+                      id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                  "sqrt_a_f","sig", "upper", "lower","stream"))
+
+fa_position_S_stat <- separate(fa_position_S_stat, variable, 
+                               into = c("variable", "position"))
+
+fa_position_S_stat <- reshape2::dcast(fa_position_S_stat, day + crit + 
+                                         diff_a_f + sum_a_f + sqrt_a_f + 
+                                         sig + upper + lower + stream + position
+                                       ~ variable, value.var="value")
+
+fa_position_S_stat$position <- factor(fa_position_S_stat$position,
+                                      levels = c("forest", "agriculture"))
+
+fa_position_S_stat_sig <- filter(fa_position_S_stat, sig == "significant") # no significant differences
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+fa_position_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+    guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_ribbon(data=fa_position_S_stat, aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  geom_line(data= fa_position_S_stat, aes(x=day, y=fit, col = position)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+#  geom_point(data =bio_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Total fatty acids", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+ ylim(0, 0.3)
+
+fa_position_S_plot
+```
+
+### Get values for paper
+Estimate export per area in whole sampling period
+```{r, message=FALSE, warning=FALSE}
+export_fa <- ddply(fa_position_S_stat, c("position"), summarise, 
+                   fa_area_day_sum = sum(fit, na.rm = TRUE), 
+                   fa_area_day_mean = mean(fit, na.rm = TRUE), 
+                   fa_area_day_sd = sd(fit, na.rm = TRUE))
+
+export_fa$N <- 100
+
+export_fa$days <- with(fa_position_S_stat, 
+                       max(fa_position_S_stat$day) - min(fa_position_S_stat$day))
+
+export_fa$fa_area_microgram_sum <- with(export_fa, fa_area_day_sum*days)
+export_fa$fa_area_mg_sum <- with(export_fa, round(fa_area_microgram_sum*10^-3, digits = 3))
+
+export_fa$fa_area_microgram_mean <- with(export_fa, fa_area_day_mean*days)
+
+export_fa$fa_area_microgram_sd <- with(export_fa, fa_area_day_sd*days)
+```
+
+Calculate 95 % CI of export
+
+We need CI of sum, which is the same as CI of mean multiplied by the number of observations (N)
+
+$ \sigma $: standard deviation
+
+$$ CI_{95} = (mean ± 1.959964 \cdot {\sigma \over \sqrt N}) \cdot N $$
+
+$$ CI_{95} = (mean ± 1.959964 \cdot {\sigma \over \sqrt N}) \cdot N $$
+```{r, message=FALSE, warning=FALSE}
+export_fa$upper_CI_microgram <- with(export_fa, 
+                (fa_area_microgram_mean + 1.959964 * fa_area_microgram_sd/sqrt(N))*N)
+export_fa$upper_CI_mg <- with(export_fa, round(upper_CI_microgram*10^-3, digits = 3))
+
+
+export_fa$lower_CI_microgram <- with(export_fa, 
+                (fa_area_microgram_mean - 1.959964 * fa_area_microgram_sd/sqrt(N))*N)
+export_fa$lower_CI_mg <- with(export_fa, round(lower_CI_microgram*10^-3, digits = 3))
+```
+
+## Fit HGAM for order in agriculture/forest
+
+* For theoretical background see: Pedersen, E. J., Miller, D. L., Simpson, G. L., & Ross, N. (2019). https://doi.org/10.7717/peerj.6876
+
+* Used to show seasonal patterns in FA export
+
+* Fitted without global smoother
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#fa_position_order_S <- gam(fa_area_day ~ s(day, pos_ord, bs = "fs") +
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(fa_position_order_S, file="fa_position_order_S.RData")
+load("8_fa_position_order_S.RData")
+
+BIC(fa_position_order_S)
+
+summary(fa_position_order_S)
+
+draw(fa_position_order_S)
+
+par(mfrow = c(2,2))
+gam.check(fa_position_order_S)  # looks okay
+par(mfrow = c(1,1))
+```
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#fa_position_order_I <- gam(fa_area_day ~ s(day, by = pos_ord, bs = "cc")+
+#           s(pos_ord, bs = "re")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+ #         method = "REML")
+
+#save(fa_position_order_I, file="fa_position_order_I.RData")
+load("9_fa_position_order_I.RData")
+
+BIC(fa_position_order_S, fa_position_order_I) # fa_position_order_S better model
+
+summary(fa_position_order_I)
+
+draw(fa_position_order_I)
+
+par(mfrow = c(2,2))
+gam.check(fa_position_order_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Effect size: Difference between mean fit
+Use difference between mean fit of vine and forest as effect size and calculate its 95 % CI
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_pred <- with(fa_emergence_hgam,
+                      expand.grid(day=seq(min(day), max(day), length= 100),
+                                  pos_ord=levels(pos_ord), 
+                                  stream=levels(stream)))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_pred <- cbind(fa_position_order_S_pred,
+                       predict(fa_position_order_S, 
+                               fa_position_order_S_pred, 
+                               se.fit=TRUE, 
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat <- filter(fa_position_order_S_pred, stream == "Dierbach")
+
+fa_position_order_S_stat <- separate(fa_position_order_S_stat, pos_ord, into= c("position", "order"))
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat_fit <- reshape2::dcast(fa_position_order_S_stat, 
+                                                 day + stream + order ~ position,
+                                                 value.var="fit")
+names(fa_position_order_S_stat_fit)[4:5] <- c("fit_forest", "fit_agriculture")
+
+fa_position_order_S_stat_se <- reshape2::dcast(fa_position_order_S_stat, day + 
+                                        stream + order ~ position, 
+                                      value.var="se.fit")
+names(fa_position_order_S_stat_se)[4:5] <- c("se_forest", "se_agriculture")
+
+fa_position_order_S_stat <- left_join(fa_position_order_S_stat_fit, fa_position_order_S_stat_se, by = c("day", "stream", "order"))
+```
+
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$crit <- with(fa_position_order_S_stat, 1.959964)
+```
+
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$diff_a_f <- with(fa_position_order_S_stat, 
+                                          fit_agriculture - fit_forest)
+```
+
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$sum_a_f <- with(fa_position_order_S_stat, 
+                                          (se_agriculture^2) + (se_forest^2))
+```
+
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$sqrt_a_f <- with(fa_position_order_S_stat, sqrt(sum_a_f))
+```
+
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$upper <- with(fa_position_order_S_stat, 
+                                       diff_a_f + crit*sqrt_a_f)
+```
+
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$lower <- with(fa_position_order_S_stat, 
+                                       diff_a_f - crit*sqrt_a_f)
+```
+
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat$sig <- with(fa_position_order_S_stat,
+                                     between(rep(0,400), lower, upper)) # True means 0 included in CI, so not significant
+fa_position_order_S_stat$sig <- 
+  gsub("FALSE","significant", fa_position_order_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+fa_position_order_S_stat <- reshape2::melt(fa_position_order_S_stat, 
+                             id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                         "sqrt_a_f","sig", "upper", "lower",
+                                         "stream", "order"))
+
+fa_position_order_S_stat <- separate(fa_position_order_S_stat, variable, 
+                                      into = c("variable", "position"))
+
+fa_position_order_S_stat <- reshape2::dcast(fa_position_order_S_stat, 
+                                             day + crit + diff_a_f + 
+                                               sum_a_f + sqrt_a_f + sig + 
+                                               upper + lower + stream + 
+                                               position + order ~ variable,
+                                             value.var="value")
+
+fa_position_order_S_stat$position <- gsub("vine","agriculture", fa_position_order_S_stat$position)
+fa_position_order_S_stat$position <- factor(fa_position_order_S_stat$position, levels = c("forest", "agriculture"))
+
+fa_position_order_S_stat_sig <- filter(fa_position_order_S_stat, sig == "significant")
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+fa_position_Diptera_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data = fa_position_order_S_stat[fa_position_order_S_stat$order ==
+                                              "Diptera",], 
+            aes(col = position, x=day, y=fit)) +
+  geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order ==
+                                              "Diptera",], aes(x=day, y=fit, 
+                         fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), 
+              alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = fa_position_order_S_stat_sig[fa_position_order_S_stat_sig$order ==
+                                                   "Diptera",], 
+             aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Flies (Diptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(0, 0.3)
+
+fa_position_Ephemeroptera_S_plot <- ggplot() +
+  theme_classic() + 
+     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = fa_position_order_S_stat_sig[fa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Mayflies (Ephemeroptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(0, 0.3)
+
+fa_position_Trichoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size=15), axis.title = element_text(size=15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = fa_position_order_S_stat_sig[fa_position_order_S_stat_sig$order == "Trichoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Caddisflies (Trichoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(0, 0.3)
+
+fa_position_Plecoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = fa_position_order_S_stat_sig[fa_position_order_S_stat_sig$order == "Plecoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Stoneflies (Plecoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(0, 0.3)
+
+x <- c(150:170,150:170)
+y_1 <- rep(0.2, 21)
+y_2 <-  rep(0.1, 21)
+
+y <- c(y_1,y_2)
+
+legend_data <- as.data.frame(cbind(x,y))
+legend_data$position <- with(legend_data, ifelse(y == 0.2, "forest", "agriculture"))
+
+legend_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), plot.title = element_blank(),
+         axis.text = element_blank(), axis.title = element_blank(),
+         axis.ticks = element_blank(),axis.line = element_blank()) +
+  geom_line(data=legend_data, aes(x=x, y=y, col = position), show.legend = FALSE,
+            size = 0.8) +
+  scale_color_manual(values=c("deepskyblue", "chartreuse4")) +
+  annotate(geom = "text", x = 182, y = 0.2, label = "forest", size = 6) +
+  annotate(geom = "text", x = 192, y = 0.1, label = "agriculture", size = 6) +
+  ylim(0, 0.3) +
+  xlim(91, 256)
+```
+
+### Save plot
+```{r, message=FALSE, warning=FALSE}
+plot_fa <- ggarrange(fa_position_S_plot, 
+                     fa_position_Ephemeroptera_S_plot,
+                     fa_position_Diptera_S_plot,
+                     fa_position_Trichoptera_S_plot,
+                     fa_position_Plecoptera_S_plot,
+                     legend_plot,
+                  labels = c("(a)", "(b)", "(c)", "(d)", "(e)"),
+                  font.label = list(face = "bold"),
+                  ncol = 2, nrow = 3, 
+                  common.legend = TRUE, legend = "none")
+
+#png("gam_plot_fa.png", width=10, height=15, units="in", res=300)
+plot_fa
+#dev.off()
+```
+
+### Get values for paper
+```{r, message=FALSE, warning=FALSE}
+fa_position_dip_S_stat <- filter(fa_position_order_S_stat, order == "Diptera")
+fa_position_dip_S_stat_sig <- filter(fa_position_order_S_stat_sig, order == "Diptera") 
+fa_position_eph_S_stat <- filter(fa_position_order_S_stat, order == "Ephemeroptera")
+fa_position_eph_S_stat_sig <- filter(fa_position_order_S_stat_sig, 
+                                     order == "Ephemeroptera")
+
+fa_position_ple_S_stat <- filter(fa_position_order_S_stat, order == "Plecoptera")
+fa_position_ple_S_stat_sig <- filter(fa_position_order_S_stat_sig, 
+                                     order == "Plecoptera")
+
+fa_position_tri_S_stat <- filter(fa_position_order_S_stat, order == "Trichoptera")
+fa_position_tri_S_stat_sig <- filter(fa_position_order_S_stat_sig, 
+                                     order == "Trichoptera")
+
+```
+
+## Export HGAM output 
+```{r, message =FALSE, warning= FALSE}
+#htmlreg(list(fa_position_S, fa_position_order_S), digits = 4, stars = #numeric(0), caption.above = TRUE, 
+#        caption = "HGAM biomass", 
+#        float.pos = "h!", label = "tab:3", 
+#        custom.model.names = c("S HGAM FA land use", 
+#                               "S HGAM FA land use and order"), 
+#        file = "HGAM_S.doc")
+
+#htmlreg(list(fa_position_I, fa_position_order_I), digits = 4, stars = numeric(0), caption.above = TRUE, 
+#        caption = "HGAM biomass", 
+#        float.pos = "h!", label = "tab:3", 
+#        custom.model.names = c("I HGAM FA land use", 
+#                               "I HGAM FA land use and order"), 
+#        file = "HGAM_I.doc")
+```
+
+# Plot difference environmental data
+
+* Difference between vine and forest: x = value vine - value forest
+* x < 0 higher in forest
+* x > 0 higher in agriculture
+
+Prepare data
+```{r, message =FALSE, warning= FALSE}
+
+diff <- reshape2::melt(env_1, id=c( "Site", "stream", "position", "season"))
+
+diff <- reshape2::dcast(diff, stream + season + variable ~ position, value.var="value")
+
+diff$difference <- diff$forest - diff$agriculture
+
+diff <- reshape2::dcast(diff, stream + season ~ variable, value.var="difference")
+
+diff$season <- factor(diff$season, levels = c("spring", "summer", "autumn"))
+
+diff_mean <- reshape2::melt(diff, id=c( "stream", "season"))
+diff_mean <- ddply(diff_mean,c("variable", "season"),  
+                   summarise, mean = round(mean(value), digit = 1), 
+                   sd = round(sd(value), digit = 1),  
+                   min = round(min(value), digit = 1), 
+                   max = round(max(value), digit = 1))
+```
+
+Plot
+```{r, message=FALSE, warning=FALSE}
+diff_sumTU <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=max_sumTU_ms_pyr), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=max_sumTU_ms_pyr), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=max_sumTU_ms_pyr), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +
+  theme(plot.title = element_text(size=17), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15), axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Pesticide toxicity (maximum sumTU)", y=expression( )) +
+ geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_NO3 <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=NO3), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=NO3), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=NO3), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +     
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Nitrate concentration", 
+       y=expression("("~mg~ ~mL^-1~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_PO4 <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=PO4), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=PO4), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=PO4), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15), axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Phosphate concentration", y=expression("("~mg~ ~mL^-1~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_water_temp <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=water_temp), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=water_temp), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=water_temp), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +     
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Water temperature", y=expression("("~"°"~C~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_air_temp <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=air_temp), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=air_temp), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=air_temp), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +     
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Air temperature", y=expression("("~"°"~C~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_cond <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=conductivity), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=conductivity), binaxis="y", stackdir="center", dotsize = 1.5, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=conductivity), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x =element_blank(), axis.text.x = element_blank()) +
+  labs(title = "Electrical conductivity (EC)", y=expression("("~"µ"~S~ ~cm^-1~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_pool <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=pools), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=pools), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=pools), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +
+  theme(plot.title = element_text(size=19), axis.text = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x =element_blank()) +
+  labs(title = "Pool habitats", y=expression("("~"%"~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_O2 <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=o2_perc), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=o2_perc), binaxis="y", stackdir="center", dotsize = 1.5, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=o2_perc), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x =element_blank(), axis.text.x =element_blank()) +
+  labs(title = "Oxygen saturation", y=expression("("~"%"~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_shade <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=shading), trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=shading), binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=shading), fun=mean, geom="point", size=6, color="darkgreen", alpha = 0.7) +
+  theme_classic() +     
+  theme(plot.title = element_text(size=19), axis.text.y = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x =element_blank(), axis.text.x =element_blank()) +
+  labs(title = "Shading", y=expression("("~"%"~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+diff_biomass <- ggplot() +
+  geom_violin(data=diff, aes(x=season, y=biomass_site_mean), 
+              trim = FALSE) +
+   geom_dotplot(data=diff, aes(x=season, y=biomass_site_mean), 
+                binaxis="y", stackdir="center", dotsize = 2, fill = NA, color="darkgreen") +
+  stat_summary(data=diff, aes(x=season, y=biomass_site_mean), 
+               fun=mean, geom="point", size=6, color="darkgreen", 
+               alpha = 0.7) +
+  theme_classic() +     
+  theme(plot.title = element_text(size=19), axis.text = element_text(size=15), axis.title.y = element_text(size=15),  axis.title.x =element_blank()) +
+  labs(title = "Biomass emergence", 
+       y=expression("("~mg~ ~m^-2~d^-1~")")) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed")
+
+plot_diff <- ggarrange(diff_sumTU, diff_water_temp, diff_air_temp,
+                          diff_NO3, diff_PO4, diff_cond,
+                          diff_shade, diff_O2, diff_pool, 
+                          diff_biomass,
+                  labels = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)", "(g)","(h)",
+                             "(i)", "(j)"),
+                  ncol = 2, nrow = 5, align = "v")
+
+plot_diff <- annotate_figure(plot_diff, top = text_grob(" ", face = "bold", size = 50))
+
+plot_diff <- annotate_figure(plot_diff, fig.lab = ("Differences in environmental variables between forested and agricultural sites"), fig.lab.pos = "top.left", fig.lab.size = 17, fig.lab.face = "bold")
+
+png("diff_plot.png", width=10, height=20, units="in", res=300)
+plot_diff
+dev.off()
+```
+
+
+# Export mean ± sd of environmental variables used in statistics
+```{r, message =FALSE, warning= FALSE}
+mean_env_all <- env[,c(1:5,12:61)]
+str(mean_env_all)
+
+mean_env_all <- reshape2::melt(mean_env_all, 
+                        id.vars=c("Site", "stream",
+                                  "position","season"))
+str(mean_env_all)
+
+mean_env_all <- ddply(mean_env_all, c("position","variable"), summarise, mean = round(mean(value, na.rm = TRUE), digit = 1), sd = round(sd(value, na.rm = TRUE), digit = 1)) # no agriculture and fallow in forest so no mean and sd available -> set manually to 0 in document
+
+mean_env_all <- unite(mean_env_all, "mean (±sd)", "mean", "sd", 
+                      remove = TRUE, sep = " (±")
+
+mean_env_all$a <- ")"
+mean_env_all <- unite(mean_env_all, "mean (±sd)", "mean (±sd)", "a", 
+                      remove = TRUE, sep = "")
+
+mean_env_all$variable <- gsub("\\.", " ", mean_env_all$variable)
+mean_env_all$variable <- gsub("  ", " ", mean_env_all$variable)
+
+unique(mean_env_all$variable)
+
+mean_env_all$variable <- gsub("land ", "Land ", mean_env_all$variable)
+mean_env_all$variable <- gsub("height ", "Height ", mean_env_all$variable)
+mean_env_all$variable <- gsub("distance ", "Distance ",
+                              mean_env_all$variable)
+
+mean_env_all$variable <- gsub("shore ", "Shore ", mean_env_all$variable)
+mean_env_all$variable <- gsub("shading", "Shading", mean_env_all$variable)
+mean_env_all$variable <- gsub("air temperature", "Air temperature (1)", mean_env_all$variable)
+mean_env_all$variable <- gsub("Cl", "Chloride (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("conductivity", "Electrical conductivity (1)", mean_env_all$variable)
+mean_env_all$variable <- gsub("Cu", "Copper (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("NH4", "Ammonium (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("NO2", "Nitrite (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("NO3", "Nitrate (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("o2_mgL", "Oxygen (1)", mean_env_all$variable)
+mean_env_all$variable <- gsub("o2_perc", "Oxygen saturation (1)", mean_env_all$variable)
+mean_env_all$variable <- gsub("PO4", "Phosphate (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("SO4", "Sulfate (2)", mean_env_all$variable)
+mean_env_all$variable <- gsub("water_temp", "Water temperature (1)", mean_env_all$variable)
+mean_env_all$variable <- gsub("max_sumTU_ms_pyr", "Pesticide toxicity", mean_env_all$variable)
+mean_env_all$variable <- gsub("curvature", "Curvature", mean_env_all$variable)
+mean_env_all$variable <- gsub("depth" , "Depth", mean_env_all$variable)
+mean_env_all$variable <- gsub("riffles", "Riffles", mean_env_all$variable)
+mean_env_all$variable <- gsub("pools", "Pools", mean_env_all$variable)
+mean_env_all$variable <- gsub("max_width", "Maximum width", mean_env_all$variable)
+mean_env_all$variable <- gsub("min_width", "Minimum width", mean_env_all$variable)
+mean_env_all$variable <- gsub("Flow", "Flow (3)", mean_env_all$variable)
+mean_env_all$variable <- gsub("width", "Width", mean_env_all$variable)   
+mean_env_all$variable <- gsub("biomass_site_mean", 
+                              "Biomass emergence", mean_env_all$variable) 
+
+
+mean_env_all <- reshape2::dcast(mean_env_all, variable ~ position, value.var="mean (±sd)")
+
+mean_env_rda <- filter(mean_env_all, variable %in% 
+                  c("Pesticide toxicity", "Nitrate (2)", "Phosphate (2)",
+                    "Water temperature (1)", "Air temperature (1)",
+                    "Pools", "Electrical conductivity (1)", 
+                    "Shading", "Oxygen saturation (1)", 
+                    "Biomass emergence"))
+
+names(mean_env_all)[1] <- c("Environmental variables")
+names(mean_env_all)[2] <- c("Forest: mean ± (sd)")
+names(mean_env_all)[3] <- c("Agriculture: mean ± (sd)")
+
+names(mean_env_rda)[1] <- c("Environmental variables")
+names(mean_env_rda)[2] <- c("Forest: mean ± (sd)")
+names(mean_env_rda)[3] <- c("Agriculture: mean ± (sd)")
+
+#write.csv(mean_env_all, file = "mean_env_all.csv", row.names = FALSE)
+#write.csv(mean_env_rda, file = "mean_env_rda.csv", row.names = FALSE)
+```
