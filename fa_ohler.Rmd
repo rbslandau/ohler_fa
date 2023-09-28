@@ -1,5 +1,5 @@
 ---
-title: "Land use alters ecosystem transfer of high value fatty acids by aquatic insects"
+title: "Land use alters cross-ecosystem transfer of high value fatty acids by aquatic insects"
 output:
   html_document:
     figure_caption: yes
@@ -1682,7 +1682,7 @@ results_rda <- as.data.frame(results_rda)
 
 
 ## Plot RDA
-### Total FA
+### Emergence (Total FA)
 First rough plot
 ```{r}
 plot(rda_3, scaling = "symmetric")
@@ -1768,7 +1768,7 @@ rda_total_plot <- ggplot() +
            aes(x=RDA1*3-0.15,y=RDA2*3,label=va_sc_names)) +
   geom_text(data = fa_sc,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
-  labs(title = "Total fatty acids", 
+  labs(title = "Emergence", 
        x=expression(RDA1 ~ "*" ~"("~7~"%"~ total~ variance~ ")"),
        y=expression(RDA2 ~"("~4~"%"~ total~ variance~ ")")) 
 ```
@@ -2145,7 +2145,7 @@ rda_dip_plot <- ggplot() +
            aes(x=RDA1*3+0.25,y=RDA2*3,label=va_sc_names_dip)) +
   geom_text(data = fa_sc_dip,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
-  labs(title = "Flies (Diptera)", 
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
        x=expression(RDA1 ~ "*" ~"("~14~"%"~ total~ variance~ ")"),
        y=expression(RDA2 ~"("~6~"%"~ total~ variance~ ")"))
 ```
@@ -2268,7 +2268,47 @@ plot_rda
 
 * dry_weight_mg: Weight of sample, in which FA were analysed
 
-Sum up dry pufa per period 
+* dry_pufa: Weight FA per dry weight of organism (microgramm FA per milligram dry mass)
+
+Sum SFA (saturated FA), MUFA (monounsaturated FA) and PUFA (polyunsaturated FA)
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam_1 <- select(fa_emergence_1, 
+                            c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa", "name_pufa",
+                              "dry_pufa", "season"))
+
+fa_emergence_hgam_SFA <- filter(fa_emergence_hgam_1, name_pufa %in% 
+                                c("18:0", "20:0",  "22:0", "24:0"))
+
+fa_emergence_hgam_SFA <- ddply(fa_emergence_hgam_SFA, 
+                                   c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa","season"),
+                            summarise,
+                            total_SFA = sum(dry_pufa))
+
+fa_emergence_hgam_MUFA <- filter(fa_emergence_hgam_1, name_pufa %in% 
+                                c("18:1n-9t", "18:1n-9c", "18:1n-7", 
+                                  "20:1n-9", "22:1n-9", "24:1n-9"))
+fa_emergence_hgam_MUFA <- ddply(fa_emergence_hgam_MUFA, 
+                                   c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa","season"),
+                            summarise,
+                            total_MUFA = sum(dry_pufa))
+
+fa_emergence_hgam_PUFA <- filter(fa_emergence_hgam_1, name_pufa %in% 
+                                   c("18:2n-6t", "18:2n-6c", "18:3n-6", 
+                                     "18:3n-3", "20:2n-6", "20:3n-6", 
+                                     "20:4n-6", "20:3n-3", "20:5n-3", 
+                                     "22:2n-6", "22:6n-3")) 
+fa_emergence_hgam_PUFA <- ddply(fa_emergence_hgam_PUFA, 
+                                   c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa","season"),
+                            summarise,
+                            total_PUFA = sum(dry_pufa))
+
+```
+
+Get total FA
 ```{r, message=FALSE, warning=FALSE}
 fa_emergence_hgam <- select(fa_emergence_1, 
                             c("stream", "position", "order", "period",
@@ -2276,6 +2316,22 @@ fa_emergence_hgam <- select(fa_emergence_1,
 
 fa_emergence_hgam <- distinct(fa_emergence_hgam)
 ```
+
+Merge tables with total, SFA, MUFA and PUFA
+```{r, message=FALSE, warning=FALSE}
+fa_emergence_hgam <- left_join(fa_emergence_hgam, fa_emergence_hgam_SFA,
+                  by = c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa", "season"))
+
+fa_emergence_hgam <- left_join(fa_emergence_hgam, fa_emergence_hgam_MUFA,
+                  by = c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa", "season"))
+
+fa_emergence_hgam <- left_join(fa_emergence_hgam, fa_emergence_hgam_PUFA,
+                  by = c("stream", "position", "order", "period",
+                              "dry_weight_mg", "total_fa", "season"))
+```
+
 
 Modenbach agriculture Plecoptera B two measurements: Take mean FA 
 ```{r, message=FALSE, warning=FALSE}
@@ -2289,7 +2345,10 @@ fa_mod_agri_plec_b <- ddply(fa_mod_agri_plec_b,
                              c("stream", "position", "order", "period",
                               "dry_weight_mg", "season"),
                             summarise,
-                            total_fa = mean(total_fa))
+                            total_fa = mean(total_fa),
+                            total_SFA = mean(total_SFA),
+                            total_MUFA = mean(total_MUFA),
+                            total_PUFA = mean(total_PUFA))
 
 
 fa_emergence_hgam <- fa_emergence_hgam[-c(361, 362),]
@@ -2298,9 +2357,12 @@ fa_emergence_hgam <- rbind(fa_emergence_hgam, fa_mod_agri_plec_b)
 
 ```
 
-Calculate amount of FA in sample
+Calculate amount of FA, SFA, MUFA, PUFA in sample
 ```{r, message=FALSE, warning=FALSE}
 fa_emergence_hgam$weight_FA <- with(fa_emergence_hgam, total_fa*dry_weight_mg)
+fa_emergence_hgam$weight_SFA <- with(fa_emergence_hgam, total_SFA*dry_weight_mg)
+fa_emergence_hgam$weight_MUFA <- with(fa_emergence_hgam, total_MUFA*dry_weight_mg)
+fa_emergence_hgam$weight_PUFA <- with(fa_emergence_hgam, total_PUFA*dry_weight_mg)
 ```
 
 Get samples, where emergence was 0 and therefore no FA 
@@ -2331,15 +2393,22 @@ no_emergence <- select(no_emergence, -c("variable"))
 names(no_emergence)[4] <- "period"
 ```
 
-Add column dry_weight_mg, total_fa, weight_FA
+Add column dry_weight_mg, total_fa, weight_FA, weight of FA, SFA, MUFA, PUFA
 ```{r, message=FALSE, warning=FALSE}
 no_emergence$dry_weight_mg <- 0
 no_emergence$total_fa <- 0
+no_emergence$total_SFA <- 0
+no_emergence$total_MUFA <- 0
+no_emergence$total_PUFA <- 0
+
 no_emergence$season <- with(no_emergence, ifelse(period %in% spring, "spring",
                                               ifelse(period %in% summer, "summer",
                                               ifelse(period %in% autumn, "autumn",
                                                      "spring_summer"))))
 no_emergence$weight_FA <- 0
+no_emergence$weight_SFA <- 0
+no_emergence$weight_MUFA <- 0
+no_emergence$weight_PUFA <- 0
 ```
 
 Bind no_emergence and fa_emergence_hgam
@@ -2446,7 +2515,8 @@ Chose only Chironomidae of Diptera
 ```{r, message=FALSE, warning=FALSE}
 order_emergence_hgam <- filter(order_emergence_hgam, 
                           family == "Chironomidae" | 
-                          order %in% c("Ephemeroptera", "Plecoptera", "Trichoptera"))
+                          order %in% c("Ephemeroptera", "Plecoptera",
+                                       "Trichoptera"))
 ```
 
 Add time periods A, B, ... N to data
@@ -2558,12 +2628,12 @@ order_trap_days_period_differ$area_collection_days <- with(order_trap_days_perio
 order_trap_days_period$area_collection_days <- with(order_trap_days_period, area_period*collection_days_period)
 
 remove_from_order_trap_days_period <- unite(order_trap_days_period_differ,
-                                            "remove", "stream", "position", "period",
+                                          "remove", "stream", "position", "period",
                                             "order")
 remove_from_order_trap_days_period <- remove_from_order_trap_days_period$remove
 
 order_trap_days_period <- unite(order_trap_days_period,
-                                            "remove", "stream", "position", "period",
+                                           "remove", "stream", "position", "period",
                                             "order", remove = FALSE)
 
 
@@ -2664,7 +2734,7 @@ order_trap_days_period$position <- as.factor(order_trap_days_period$position)
 order_trap_days_period$period <- as.factor(order_trap_days_period$period)
 
 fa_emergence_hgam <- left_join(fa_emergence_hgam, order_trap_days_period, 
-                  by = c("stream", "position", "order", "period"))
+                  by = c("stream", "position", "order", "period")) # rows only in fa_emergence_hgam (x): when no emergence was captured, so FA export = 0 
 ```
 
 Get day of the year (convert date into day of year) for HGAM
@@ -2677,6 +2747,18 @@ Get export FA per area and collection days
 fa_emergence_hgam$fa_area_day <- with(fa_emergence_hgam, 
                                       ifelse(weight_FA == 0, 0,
                                       weight_FA/(area_collection_days)))
+
+fa_emergence_hgam$sfa_area_day <- with(fa_emergence_hgam, 
+                                      ifelse(weight_SFA == 0, 0,
+                                      weight_SFA/(area_collection_days)))
+
+fa_emergence_hgam$mufa_area_day <- with(fa_emergence_hgam, 
+                                      ifelse(weight_MUFA == 0, 0,
+                                      weight_MUFA/(area_collection_days)))
+
+fa_emergence_hgam$pufa_area_day <- with(fa_emergence_hgam, 
+                                      ifelse(weight_PUFA == 0, 0,
+                                      weight_PUFA/(area_collection_days)))
 ```
 
 Get column with information about position and order
@@ -2692,7 +2774,10 @@ fa_emergence_total_hgam <- ddply(fa_emergence_hgam,
                              c("stream", "position", "period",
                                "season", "begin_date", "end_date", "day"),
                             summarise,
-                            fa_area_day = sum(fa_area_day))
+                            fa_area_day = sum(fa_area_day),
+                            sfa_area_day = sum(sfa_area_day),
+                            mufa_area_day = sum(mufa_area_day),
+                            pufa_area_day = sum(pufa_area_day))
 ```
 
 Chr in factor
@@ -2712,6 +2797,7 @@ count_plecoptera_forest <- filter(count_plecoptera,
                                        position == "forest")
 ```
 
+Save data
 ```{r, message=FALSE, warning=FALSE}
 #write.csv(fa_emergence_hgam, "fa_emergence_hgam_2.csv")
 
@@ -2724,7 +2810,7 @@ library(mgcv)
 library(gratia)
 ```
 
-## Fit HGAM for land use (forest, agriculture)
+## Fit FA HGAM for land use (forest, agriculture)
 
 * gaussian is no suitable distribution (too many zeros)
 
@@ -2782,7 +2868,7 @@ par(mfrow = c(1,1))
 
 ### Effect size: Difference between mean fit
 
-Use difference between mean fit of vine and forest as effect size and calculate its 95 % CI
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
 
 * $X$: Mean fit of FA export for agricultural and forested sites
 * $\sigma$: Standard devation of mean fit
@@ -2834,7 +2920,7 @@ Add critical value for 95 % CI
 ```{r, message=FALSE, warning=FALSE}
 fa_position_S_stat$crit <- with(fa_position_S_stat, 1.959964)
 ```
-Calculate difference between fit of vine and forest
+Calculate difference between fit of agriculture and forest
 ```{r, message=FALSE, warning=FALSE}
 fa_position_S_stat$diff_a_f <- with(fa_position_S_stat, fit_agriculture - fit_forest)
 ```
@@ -2894,12 +2980,11 @@ fa_position_S_plot <- ggplot() +
   scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
   geom_line(data= fa_position_S_stat, aes(x=day, y=fit, col = position)) +
   scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
-#  geom_point(data =bio_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_point(data =fa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Total fatty acids", 
-       x=expression(day~ of ~ the ~ year),
-       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  labs(x=expression(day~ of ~ the ~ year),
+       y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
   annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
@@ -2949,7 +3034,626 @@ export_fa$lower_CI_microgram <- with(export_fa,
 export_fa$lower_CI_mg <- with(export_fa, round(lower_CI_microgram*10^-3, digits = 3))
 ```
 
-## Fit HGAM for order in agriculture/forest
+## Fit SFA HGAM for land use (forest, agriculture)
+
+* gaussian is no suitable distribution (too many zeros), so use Tweedie distribution
+
+* Fitted without global smoother
+
+* position = land use
+
+### Similar group-level trends (shared penalty)
+```{r, message=sfaLSE, warning=sfaLSE}
+#sfa_position_S <- gam(sfa_area_day ~ s(day, position, bs = "fs")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(sfa_position_S, file="sfa_position_S.RData")
+load("sfa_position_S.RData")
+
+BIC(sfa_position_S)
+summary(sfa_position_S)
+
+draw(sfa_position_S)
+
+par(mfrow = c(2,2))
+gam.check(sfa_position_S)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Different group level-trends (individual penalties)
+```{r, message=sfaLSE, warning=sfaLSE}
+#sfa_position_I <- gam(sfa_area_day ~ s(day, by = position, bs = "cc")+
+#             s(position, bs = "re")+
+#             s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(sfa_position_I, file="sfa_position_I.RData")
+load("sfa_position_I.RData")
+
+BIC(sfa_position_S, sfa_position_I) # sfa_position_S is better model than models without similar group-level trends
+summary(sfa_position_I)
+
+draw(sfa_position_I)
+
+par(mfrow = c(2,2))
+gam.check(sfa_position_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+
+### Effect size: Difference between mean fit
+
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+
+Setup prediction data frame
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_pred <- with(fa_emergence_total_hgam,
+                      expand.grid(day=seq(min(day), max(day), length=100),
+                                  stream=levels(stream), 
+                      position=levels((position))))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_pred <- cbind(sfa_position_S_pred,
+                       predict(sfa_position_S, 
+                               sfa_position_S_pred, 
+                               se.fit=TRUE,
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing.
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat <- filter(sfa_position_S_pred, stream == "Dierbach")
+```
+Put table into needed format
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat_fit <- reshape2::dcast(sfa_position_S_stat, day + stream
+                                          ~ position, value.var="fit")
+names(sfa_position_S_stat_fit)[3:4] <- c("fit_forest", "fit_agriculture")
+
+sfa_position_S_stat_se <- reshape2::dcast(sfa_position_S_stat, day + stream
+                                       ~ position, value.var="se.fit")
+names(sfa_position_S_stat_se)[3:4] <- c("se_forest", "se_agriculture")
+
+sfa_position_S_stat <- left_join(sfa_position_S_stat_fit, sfa_position_S_stat_se, by = c("day", "stream"))
+```
+Add critical value for 95 % CI
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$crit <- with(sfa_position_S_stat, 1.959964)
+```
+Calculate difference between fit of agriculture and forest
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$diff_a_f <- with(sfa_position_S_stat, fit_agriculture - fit_forest)
+```
+Calculate sum of se.fit^2
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$sum_a_f <- with(sfa_position_S_stat, (se_agriculture^2) +
+                                     (se_forest^2))
+```
+Calculate sqrt of sum_a_f
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$sqrt_a_f <- with(sfa_position_S_stat, sqrt(sum_a_f))
+```
+Calculate upper CI
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$upper <- with(sfa_position_S_stat, diff_a_f + crit*sqrt_a_f)
+```
+Calculate lower CI
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$lower <- with(sfa_position_S_stat, diff_a_f - crit*sqrt_a_f)
+```
+Check if CI includes 0
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat$sig <- with(sfa_position_S_stat, between(rep(0, 100), lower, upper)) # True means 0 included in CI, so not significant
+sfa_position_S_stat$sig <- gsub("sfaLSE","significant", sfa_position_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_stat <- reshape2::melt(sfa_position_S_stat, 
+                      id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                  "sqrt_a_f","sig", "upper", "lower","stream"))
+
+sfa_position_S_stat <- separate(sfa_position_S_stat, variable, 
+                               into = c("variable", "position"))
+
+sfa_position_S_stat <- reshape2::dcast(sfa_position_S_stat, day + crit + 
+                                         diff_a_f + sum_a_f + sqrt_a_f + 
+                                         sig + upper + lower + stream + position
+                                       ~ variable, value.var="value")
+
+sfa_position_S_stat$position <- factor(sfa_position_S_stat$position,
+                                      levels = c("forest", "agriculture"))
+
+sfa_position_S_stat_sig <- filter(sfa_position_S_stat, sig == "significant") # no significant differences
+```
+Plot
+```{r, message=sfaLSE, warning=sfaLSE}
+sfa_position_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+    guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_ribbon(data=sfa_position_S_stat, aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  geom_line(data= sfa_position_S_stat, aes(x=day, y=fit, col = position)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data =sfa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(x=expression(day~ of ~ the ~ year),
+       y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+ ylim(0, 0.3)
+
+sfa_position_S_plot
+```
+
+### Get values for paper
+Estimate export per area in whole sampling period
+```{r, message=sfaLSE, warning=sfaLSE}
+export_sfa <- ddply(sfa_position_S_stat, c("position"), summarise, 
+                   sfa_area_day_sum = sum(fit, na.rm = TRUE), 
+                   sfa_area_day_mean = mean(fit, na.rm = TRUE), 
+                   sfa_area_day_sd = sd(fit, na.rm = TRUE))
+
+export_sfa$N <- 100
+
+export_sfa$days <- with(sfa_position_S_stat, 
+                       max(sfa_position_S_stat$day) - min(sfa_position_S_stat$day))
+
+export_sfa$sfa_area_microgram_sum <- with(export_sfa, sfa_area_day_sum*days)
+export_sfa$sfa_area_mg_sum <- with(export_sfa, round(sfa_area_microgram_sum*10^-3, digits = 3))
+
+export_sfa$sfa_area_microgram_mean <- with(export_sfa, sfa_area_day_mean*days)
+
+export_sfa$sfa_area_microgram_sd <- with(export_sfa, sfa_area_day_sd*days)
+```
+
+Calculate 95 % CI of export
+
+We need CI of sum, which is the same as CI of mean multiplied by the number of observations (N)
+
+```{r, message=sfaLSE, warning=sfaLSE}
+export_sfa$upper_CI_microgram <- with(export_sfa, 
+                (sfa_area_microgram_mean + 1.959964 * sfa_area_microgram_sd/sqrt(N))*N)
+export_sfa$upper_CI_mg <- with(export_sfa, round(upper_CI_microgram*10^-3, digits = 3))
+
+
+export_sfa$lower_CI_microgram <- with(export_sfa, 
+                (sfa_area_microgram_mean - 1.959964 * sfa_area_microgram_sd/sqrt(N))*N)
+export_sfa$lower_CI_mg <- with(export_sfa, round(lower_CI_microgram*10^-3, digits = 3))
+```
+
+## Fit MUFA HGAM for land use (forest, agriculture)
+
+* gaussian is no suitable distribution (too many zeros), so use Tweedie distribution
+
+* Fitted without global smoother
+
+* position = land use
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#mufa_position_S <- gam(mufa_area_day ~ s(day, position, bs = "fs")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(mufa_position_S, file="mufa_position_S.RData")
+load("mufa_position_S.RData")
+
+BIC(mufa_position_S)
+summary(mufa_position_S)
+
+draw(mufa_position_S)
+
+par(mfrow = c(2,2))
+gam.check(mufa_position_S)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#mufa_position_I <- gam(mufa_area_day ~ s(day, by = position, bs = "cc")+
+#             s(position, bs = "re")+
+#             s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#         method = "REML")
+
+#save(mufa_position_I, file="mufa_position_I.RData")
+load("mufa_position_I.RData")
+
+BIC(mufa_position_S, mufa_position_I) # mufa_position_S is better model than models without similar group-level trends
+summary(mufa_position_I)
+
+draw(mufa_position_I)
+
+par(mfrow = c(2,2))
+gam.check(mufa_position_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+
+### Effect size: Difference between mean fit
+
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_pred <- with(fa_emergence_total_hgam,
+                      expand.grid(day=seq(min(day), max(day), length=100),
+                                  stream=levels(stream), 
+                      position=levels((position))))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_pred <- cbind(mufa_position_S_pred,
+                       predict(mufa_position_S, 
+                               mufa_position_S_pred, 
+                               se.fit=TRUE,
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing.
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat <- filter(mufa_position_S_pred, stream == "Dierbach")
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat_fit <- reshape2::dcast(mufa_position_S_stat, day + stream
+                                          ~ position, value.var="fit")
+names(mufa_position_S_stat_fit)[3:4] <- c("fit_forest", "fit_agriculture")
+
+mufa_position_S_stat_se <- reshape2::dcast(mufa_position_S_stat, day + stream
+                                       ~ position, value.var="se.fit")
+names(mufa_position_S_stat_se)[3:4] <- c("se_forest", "se_agriculture")
+
+mufa_position_S_stat <- left_join(mufa_position_S_stat_fit, mufa_position_S_stat_se, by = c("day", "stream"))
+```
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$crit <- with(mufa_position_S_stat, 1.959964)
+```
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$diff_a_f <- with(mufa_position_S_stat, fit_agriculture - fit_forest)
+```
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$sum_a_f <- with(mufa_position_S_stat, (se_agriculture^2) +
+                                     (se_forest^2))
+```
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$sqrt_a_f <- with(mufa_position_S_stat, sqrt(sum_a_f))
+```
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$upper <- with(mufa_position_S_stat, diff_a_f + crit*sqrt_a_f)
+```
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$lower <- with(mufa_position_S_stat, diff_a_f - crit*sqrt_a_f)
+```
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat$sig <- with(mufa_position_S_stat, between(rep(0, 100), lower, upper)) # True means 0 included in CI, so not significant
+mufa_position_S_stat$sig <- gsub("FALSE","significant", mufa_position_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_stat <- reshape2::melt(mufa_position_S_stat, 
+                      id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                  "sqrt_a_f","sig", "upper", "lower","stream"))
+
+mufa_position_S_stat <- separate(mufa_position_S_stat, variable, 
+                               into = c("variable", "position"))
+
+mufa_position_S_stat <- reshape2::dcast(mufa_position_S_stat, day + crit + 
+                                         diff_a_f + sum_a_f + sqrt_a_f + 
+                                         sig + upper + lower + stream + position
+                                       ~ variable, value.var="value")
+
+mufa_position_S_stat$position <- factor(mufa_position_S_stat$position,
+                                      levels = c("forest", "agriculture"))
+
+mufa_position_S_stat_sig <- filter(mufa_position_S_stat, sig == "significant") # no significant differences
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+mufa_position_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+        axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+    guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_ribbon(data=mufa_position_S_stat, aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  geom_line(data= mufa_position_S_stat, aes(x=day, y=fit, col = position)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data =mufa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(x=expression(day~ of ~ the ~ year),
+       y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+ ylim(0, 0.3)
+
+mufa_position_S_plot
+```
+
+### Get values for paper
+Estimate export per area in whole sampling period
+```{r, message=FALSE, warning=FALSE}
+export_mufa <- ddply(mufa_position_S_stat, c("position"), summarise, 
+                   mufa_area_day_sum = sum(fit, na.rm = TRUE), 
+                   mufa_area_day_mean = mean(fit, na.rm = TRUE), 
+                   mufa_area_day_sd = sd(fit, na.rm = TRUE))
+
+export_mufa$N <- 100
+
+export_mufa$days <- with(mufa_position_S_stat, 
+                       max(mufa_position_S_stat$day) - min(mufa_position_S_stat$day))
+
+export_mufa$mufa_area_microgram_sum <- with(export_mufa, mufa_area_day_sum*days)
+export_mufa$mufa_area_mg_sum <- with(export_mufa, round(mufa_area_microgram_sum*10^-3, digits = 3))
+
+export_mufa$mufa_area_microgram_mean <- with(export_mufa, mufa_area_day_mean*days)
+
+export_mufa$mufa_area_microgram_sd <- with(export_mufa, mufa_area_day_sd*days)
+```
+
+Calculate 95 % CI of export
+
+We need CI of sum, which is the same as CI of mean multiplied by the number of observations (N)
+
+```{r, message=FALSE, warning=FALSE}
+export_mufa$upper_CI_microgram <- with(export_mufa, 
+                (mufa_area_microgram_mean + 1.959964 * mufa_area_microgram_sd/sqrt(N))*N)
+export_mufa$upper_CI_mg <- with(export_mufa, round(upper_CI_microgram*10^-3, digits = 3))
+
+
+export_mufa$lower_CI_microgram <- with(export_mufa, 
+                (mufa_area_microgram_mean - 1.959964 * mufa_area_microgram_sd/sqrt(N))*N)
+export_mufa$lower_CI_mg <- with(export_mufa, round(lower_CI_microgram*10^-3, digits = 3))
+```
+
+## Fit PUFA HGAM for land use (forest, agriculture)
+
+* gaussian is no suitable distribution (too many zeros), so use Tweedie distribution
+
+* Fitted without global smoother
+
+* position = land use
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#pufa_position_S <- gam(pufa_area_day ~ s(day, position, bs = "fs")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#         method = "REML")
+
+#save(pufa_position_S, file="pufa_position_S.RData")
+load("pufa_position_S.RData")
+
+BIC(pufa_position_S)
+summary(pufa_position_S)
+
+draw(pufa_position_S)
+
+par(mfrow = c(2,2))
+gam.check(pufa_position_S)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#pufa_position_I <- gam(pufa_area_day ~ s(day, by = position, bs = "cc")+
+#             s(position, bs = "re")+
+#             s(stream, bs = "re"),
+#          data = fa_emergence_total_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(pufa_position_I, file="pufa_position_I.RData")
+load("pufa_position_I.RData")
+
+BIC(pufa_position_S, pufa_position_I) # pufa_position_S is better model than models without similar group-level trends
+summary(pufa_position_I)
+
+draw(pufa_position_I)
+
+par(mfrow = c(2,2))
+gam.check(pufa_position_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+
+### Effect size: Difference between mean fit
+
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_pred <- with(fa_emergence_total_hgam,
+                      expand.grid(day=seq(min(day), max(day), length=100),
+                                  stream=levels(stream), 
+                      position=levels((position))))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_pred <- cbind(pufa_position_S_pred,
+                       predict(pufa_position_S, 
+                               pufa_position_S_pred, 
+                               se.fit=TRUE,
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing.
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat <- filter(pufa_position_S_pred, stream == "Dierbach")
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat_fit <- reshape2::dcast(pufa_position_S_stat, day + stream
+                                          ~ position, value.var="fit")
+names(pufa_position_S_stat_fit)[3:4] <- c("fit_forest", "fit_agriculture")
+
+pufa_position_S_stat_se <- reshape2::dcast(pufa_position_S_stat, day + stream
+                                       ~ position, value.var="se.fit")
+names(pufa_position_S_stat_se)[3:4] <- c("se_forest", "se_agriculture")
+
+pufa_position_S_stat <- left_join(pufa_position_S_stat_fit, pufa_position_S_stat_se, by = c("day", "stream"))
+```
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$crit <- with(pufa_position_S_stat, 1.959964)
+```
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$diff_a_f <- with(pufa_position_S_stat, fit_agriculture - fit_forest)
+```
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$sum_a_f <- with(pufa_position_S_stat, (se_agriculture^2) +
+                                     (se_forest^2))
+```
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$sqrt_a_f <- with(pufa_position_S_stat, sqrt(sum_a_f))
+```
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$upper <- with(pufa_position_S_stat, diff_a_f + crit*sqrt_a_f)
+```
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$lower <- with(pufa_position_S_stat, diff_a_f - crit*sqrt_a_f)
+```
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat$sig <- with(pufa_position_S_stat, between(rep(0, 100), lower, upper)) # True means 0 included in CI, so not significant
+pufa_position_S_stat$sig <- gsub("FALSE","significant", pufa_position_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_stat <- reshape2::melt(pufa_position_S_stat, 
+                      id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                  "sqrt_a_f","sig", "upper", "lower","stream"))
+
+pufa_position_S_stat <- separate(pufa_position_S_stat, variable, 
+                               into = c("variable", "position"))
+
+pufa_position_S_stat <- reshape2::dcast(pufa_position_S_stat, day + crit + 
+                                         diff_a_f + sum_a_f + sqrt_a_f + 
+                                         sig + upper + lower + stream + position
+                                       ~ variable, value.var="value")
+
+pufa_position_S_stat$position <- factor(pufa_position_S_stat$position,
+                                      levels = c("forest", "agriculture"))
+
+pufa_position_S_stat_sig <- filter(pufa_position_S_stat, sig == "significant") 
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+pufa_position_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+        axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+    guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_ribbon(data=pufa_position_S_stat, aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  geom_line(data= pufa_position_S_stat, aes(x=day, y=fit, col = position)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data =pufa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(x=expression(day~ of ~ the ~ year),
+       y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+ ylim(0, 0.3)
+
+pufa_position_S_plot
+```
+
+### Get values for paper
+Estimate export per area in whole sampling period
+```{r, message=FALSE, warning=FALSE}
+export_pufa <- ddply(pufa_position_S_stat, c("position"), summarise, 
+                   pufa_area_day_sum = sum(fit, na.rm = TRUE), 
+                   pufa_area_day_mean = mean(fit, na.rm = TRUE), 
+                   pufa_area_day_sd = sd(fit, na.rm = TRUE))
+
+export_pufa$N <- 100
+
+export_pufa$days <- with(pufa_position_S_stat, 
+                       max(pufa_position_S_stat$day) - min(pufa_position_S_stat$day))
+
+export_pufa$pufa_area_microgram_sum <- with(export_pufa, pufa_area_day_sum*days)
+export_pufa$pufa_area_mg_sum <- with(export_pufa, round(pufa_area_microgram_sum*10^-3, digits = 3))
+
+export_pufa$pufa_area_microgram_mean <- with(export_pufa, pufa_area_day_mean*days)
+
+export_pufa$pufa_area_microgram_sd <- with(export_pufa, pufa_area_day_sd*days)
+```
+
+Calculate 95 % CI of export
+
+We need CI of sum, which is the same as CI of mean multiplied by the number of observations (N)
+
+```{r, message=FALSE, warning=FALSE}
+export_pufa$upper_CI_microgram <- with(export_pufa, 
+                (pufa_area_microgram_mean + 1.959964 * pufa_area_microgram_sd/sqrt(N))*N)
+export_pufa$upper_CI_mg <- with(export_pufa, round(upper_CI_microgram*10^-3, digits = 3))
+
+
+export_pufa$lower_CI_microgram <- with(export_pufa, 
+                (pufa_area_microgram_mean - 1.959964 * pufa_area_microgram_sd/sqrt(N))*N)
+export_pufa$lower_CI_mg <- with(export_pufa, round(lower_CI_microgram*10^-3, digits = 3))
+```
+
+## Save HGAM position plot
+```{r, message=FALSE, warning=FALSE}
+plot_fa_position <- ggarrange(fa_position_S_plot, 
+                     sfa_position_S_plot,
+                     mufa_position_S_plot,
+                     pufa_position_S_plot,
+                  labels = c("(a)", "(b)", "(c)", "(d)"),
+                  font.label = list(face = "bold"),
+                  ncol = 2, nrow = 2, 
+                  common.legend = TRUE, legend = "bottom")
+
+#png("plot_fa_position.png", width=10, height=10, units="in", res=300)
+plot_fa_position
+#dev.off()
+```
+
+## Fit FA HGAM for order in agriculture/forest
 
 * For theoretical background see: Pedersen, E. J., Miller, D. L., Simpson, G. L., & Ross, N. (2019). https://doi.org/10.7717/peerj.6876
 
@@ -3002,7 +3706,7 @@ par(mfrow = c(1,1))
 ```
 
 ### Effect size: Difference between mean fit
-Use difference between mean fit of vine and forest as effect size and calculate its 95 % CI
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
 Setup prediction data frame
 ```{r, message=FALSE, warning=FALSE}
 fa_position_order_S_pred <- with(fa_emergence_hgam,
@@ -3100,7 +3804,6 @@ fa_position_order_S_stat <- reshape2::dcast(fa_position_order_S_stat,
                                                position + order ~ variable,
                                              value.var="value")
 
-fa_position_order_S_stat$position <- gsub("vine","agriculture", fa_position_order_S_stat$position)
 fa_position_order_S_stat$position <- factor(fa_position_order_S_stat$position, levels = c("forest", "agriculture"))
 
 fa_position_order_S_stat_sig <- filter(fa_position_order_S_stat, sig == "significant")
@@ -3130,13 +3833,13 @@ fa_position_Diptera_S_plot <- ggplot() +
              aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Flies (Diptera)", 
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
        x=expression(day~ of ~ the ~ year),
-       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+       y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
   annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(0, 0.3)
+  ylim(-0.01, 0.3)
 
 fa_position_Ephemeroptera_S_plot <- ggplot() +
   theme_classic() + 
@@ -3151,15 +3854,16 @@ fa_position_Ephemeroptera_S_plot <- ggplot() +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
   labs(title = "Mayflies (Ephemeroptera)", 
        x=expression(day~ of ~ the ~ year),
-       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+       y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
   annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(0, 0.3)
+  ylim(-0.01, 0.3)
 
 fa_position_Trichoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size=15), axis.title = element_text(size=15)) +
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -3170,11 +3874,11 @@ fa_position_Trichoptera_S_plot <- ggplot() +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
   labs(title = "Caddisflies (Trichoptera)", 
        x=expression(day~ of ~ the ~ year),
-       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+       y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
   annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(0, 0.3)
+  ylim(-0.01, 0.3)
 
 fa_position_Plecoptera_S_plot <- ggplot() +
   theme_classic() + 
@@ -3189,57 +3893,18 @@ fa_position_Plecoptera_S_plot <- ggplot() +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
   labs(title = "Stoneflies (Plecoptera)", 
        x=expression(day~ of ~ the ~ year),
-       y=expression(Fatty~ acids ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+       y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
   annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(0, 0.3)
-
-x <- c(150:170,150:170)
-y_1 <- rep(0.2, 21)
-y_2 <-  rep(0.1, 21)
-
-y <- c(y_1,y_2)
-
-legend_data <- as.data.frame(cbind(x,y))
-legend_data$position <- with(legend_data, ifelse(y == 0.2, "forest", "agriculture"))
-
-legend_plot <- ggplot() +
-  theme_classic() + 
-   theme(legend.title = element_blank(), plot.title = element_blank(),
-         axis.text = element_blank(), axis.title = element_blank(),
-         axis.ticks = element_blank(),axis.line = element_blank()) +
-  geom_line(data=legend_data, aes(x=x, y=y, col = position), show.legend = FALSE,
-            size = 0.8) +
-  scale_color_manual(values=c("deepskyblue", "chartreuse4")) +
-  annotate(geom = "text", x = 182, y = 0.2, label = "forest", size = 6) +
-  annotate(geom = "text", x = 192, y = 0.1, label = "agriculture", size = 6) +
-  ylim(0, 0.3) +
-  xlim(91, 256)
-```
-
-### Save plot
-```{r, message=FALSE, warning=FALSE}
-plot_fa <- ggarrange(fa_position_S_plot, 
-                     fa_position_Ephemeroptera_S_plot,
-                     fa_position_Diptera_S_plot,
-                     fa_position_Trichoptera_S_plot,
-                     fa_position_Plecoptera_S_plot,
-                     legend_plot,
-                  labels = c("(a)", "(b)", "(c)", "(d)", "(e)"),
-                  font.label = list(face = "bold"),
-                  ncol = 2, nrow = 3, 
-                  common.legend = TRUE, legend = "none")
-
-#png("gam_plot_fa.png", width=10, height=15, units="in", res=300)
-plot_fa
-#dev.off()
+  ylim(-0.01, 0.3)
 ```
 
 ### Get values for paper
 ```{r, message=FALSE, warning=FALSE}
 fa_position_dip_S_stat <- filter(fa_position_order_S_stat, order == "Diptera")
 fa_position_dip_S_stat_sig <- filter(fa_position_order_S_stat_sig, order == "Diptera") 
+
 fa_position_eph_S_stat <- filter(fa_position_order_S_stat, order == "Ephemeroptera")
 fa_position_eph_S_stat_sig <- filter(fa_position_order_S_stat_sig, 
                                      order == "Ephemeroptera")
@@ -3254,26 +3919,882 @@ fa_position_tri_S_stat_sig <- filter(fa_position_order_S_stat_sig,
 
 ```
 
+## Fit SFA HGAM for order in agriculture/forest
+
+* For theoretical background see: Pedersen, E. J., Miller, D. L., Simpson, G. L., & Ross, N. (2019). https://doi.org/10.7717/peerj.6876
+
+* Used to show seasonal patterns in sfa export
+
+* Fitted without global smoother
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+# sfa_position_order_S <- gam(sfa_area_day ~ s(day, pos_ord, bs = "fs") +
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(sfa_position_order_S, file="sfa_position_order_S.RData")
+load("sfa_position_order_S.RData")
+
+BIC(sfa_position_order_S)
+
+summary(sfa_position_order_S)
+
+draw(sfa_position_order_S)
+
+par(mfrow = c(2,2))
+gam.check(sfa_position_order_S)  # looks okay
+par(mfrow = c(1,1))
+```
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#sfa_position_order_I <- gam(sfa_area_day ~ s(day, by = pos_ord, bs = "cc")+
+#           s(pos_ord, bs = "re")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#         method = "REML")
+
+#save(sfa_position_order_I, file="sfa_position_order_I.RData")
+load("sfa_position_order_I.RData")
+
+BIC(sfa_position_order_S, sfa_position_order_I) # sfa_position_order_S better model
+
+summary(sfa_position_order_I)
+
+draw(sfa_position_order_I)
+
+par(mfrow = c(2,2))
+gam.check(sfa_position_order_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Effect size: Difference between mean fit
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_pred <- with(fa_emergence_hgam,
+                      expand.grid(day=seq(min(day), max(day), length= 100),
+                                  pos_ord=levels(pos_ord), 
+                                  stream=levels(stream)))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_pred <- cbind(sfa_position_order_S_pred,
+                       predict(sfa_position_order_S, 
+                               sfa_position_order_S_pred, 
+                               se.fit=TRUE, 
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat <- filter(sfa_position_order_S_pred, stream == "Dierbach")
+
+sfa_position_order_S_stat <- separate(sfa_position_order_S_stat, pos_ord, into= c("position", "order"))
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat_fit <- reshape2::dcast(sfa_position_order_S_stat, 
+                                                 day + stream + order ~ position,
+                                                 value.var="fit")
+names(sfa_position_order_S_stat_fit)[4:5] <- c("fit_forest", "fit_agriculture")
+
+sfa_position_order_S_stat_se <- reshape2::dcast(sfa_position_order_S_stat, day + 
+                                        stream + order ~ position, 
+                                      value.var="se.fit")
+names(sfa_position_order_S_stat_se)[4:5] <- c("se_forest", "se_agriculture")
+
+sfa_position_order_S_stat <- left_join(sfa_position_order_S_stat_fit, sfa_position_order_S_stat_se, by = c("day", "stream", "order"))
+```
+
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$crit <- with(sfa_position_order_S_stat, 1.959964)
+```
+
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$diff_a_f <- with(sfa_position_order_S_stat, 
+                                          fit_agriculture - fit_forest)
+```
+
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$sum_a_f <- with(sfa_position_order_S_stat, 
+                                          (se_agriculture^2) + (se_forest^2))
+```
+
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$sqrt_a_f <- with(sfa_position_order_S_stat, sqrt(sum_a_f))
+```
+
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$upper <- with(sfa_position_order_S_stat, 
+                                       diff_a_f + crit*sqrt_a_f)
+```
+
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$lower <- with(sfa_position_order_S_stat, 
+                                       diff_a_f - crit*sqrt_a_f)
+```
+
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat$sig <- with(sfa_position_order_S_stat,
+                                     between(rep(0,400), lower, upper)) # True means 0 included in CI, so not significant
+sfa_position_order_S_stat$sig <- 
+  gsub("FALSE","significant", sfa_position_order_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+sfa_position_order_S_stat <- reshape2::melt(sfa_position_order_S_stat, 
+                             id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                         "sqrt_a_f","sig", "upper", "lower",
+                                         "stream", "order"))
+
+sfa_position_order_S_stat <- separate(sfa_position_order_S_stat, variable, 
+                                      into = c("variable", "position"))
+
+sfa_position_order_S_stat <- reshape2::dcast(sfa_position_order_S_stat, 
+                                             day + crit + diff_a_f + 
+                                               sum_a_f + sqrt_a_f + sig + 
+                                               upper + lower + stream + 
+                                               position + order ~ variable,
+                                             value.var="value")
+
+sfa_position_order_S_stat$position <- factor(sfa_position_order_S_stat$position, levels = c("forest", "agriculture"))
+
+sfa_position_order_S_stat_sig <- filter(sfa_position_order_S_stat, sig == "significant")
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+sfa_position_Diptera_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data = sfa_position_order_S_stat[sfa_position_order_S_stat$order ==
+                                              "Diptera",], 
+            aes(col = position, x=day, y=fit)) +
+  geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order ==
+                                              "Diptera",], aes(x=day, y=fit, 
+                         fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), 
+              alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = sfa_position_order_S_stat_sig[sfa_position_order_S_stat_sig$order ==
+                                                   "Diptera",], 
+             aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+sfa_position_Ephemeroptera_S_plot <- ggplot() +
+  theme_classic() + 
+     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = sfa_position_order_S_stat_sig[sfa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Mayflies (Ephemeroptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+sfa_position_Trichoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = sfa_position_order_S_stat_sig[sfa_position_order_S_stat_sig$order == "Trichoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Caddisflies (Trichoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+sfa_position_Plecoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = sfa_position_order_S_stat_sig[sfa_position_order_S_stat_sig$order == "Plecoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Stoneflies (Plecoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+```
+
+### Get values for paper
+```{r, message=FALSE, warning=FALSE}
+sfa_position_dip_S_stat <- filter(sfa_position_order_S_stat, order == "Diptera")
+sfa_position_dip_S_stat_sig <- filter(sfa_position_order_S_stat_sig, order == "Diptera") 
+
+sfa_position_eph_S_stat <- filter(sfa_position_order_S_stat, order == "Ephemeroptera")
+sfa_position_eph_S_stat_sig <- filter(sfa_position_order_S_stat_sig, 
+                                     order == "Ephemeroptera")
+
+sfa_position_ple_S_stat <- filter(sfa_position_order_S_stat, order == "Plecoptera")
+sfa_position_ple_S_stat_sig <- filter(sfa_position_order_S_stat_sig, 
+                                     order == "Plecoptera")
+
+sfa_position_tri_S_stat <- filter(sfa_position_order_S_stat, order == "Trichoptera")
+sfa_position_tri_S_stat_sig <- filter(sfa_position_order_S_stat_sig, 
+                                     order == "Trichoptera")
+
+```
+
+## Fit MUFA HGAM for order in agriculture/forest
+
+* For theoretical background see: Pedersen, E. J., Miller, D. L., Simpson, G. L., & Ross, N. (2019). https://doi.org/10.7717/peerj.6876
+
+* Used to show seasonal patterns in mufa export
+
+* Fitted without global smoother
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#mufa_position_order_S <- gam(mufa_area_day ~ s(day, pos_ord, bs = "fs") +
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(mufa_position_order_S, file="mufa_position_order_S.RData")
+load("mufa_position_order_S.RData")
+
+BIC(mufa_position_order_S)
+
+summary(mufa_position_order_S)
+
+draw(mufa_position_order_S)
+
+par(mfrow = c(2,2))
+gam.check(mufa_position_order_S)  # looks okay
+par(mfrow = c(1,1))
+```
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#mufa_position_order_I <- gam(mufa_area_day ~ s(day, by = pos_ord, bs = "cc")+
+#           s(pos_ord, bs = "re")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#         method = "REML")
+
+#save(mufa_position_order_I, file="mufa_position_order_I.RData")
+load("mufa_position_order_I.RData")
+
+BIC(mufa_position_order_S, mufa_position_order_I) # mufa_position_order_S better model
+
+summary(mufa_position_order_I)
+
+draw(mufa_position_order_I)
+
+par(mfrow = c(2,2))
+gam.check(mufa_position_order_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Effect size: Difference between mean fit
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_pred <- with(fa_emergence_hgam,
+                      expand.grid(day=seq(min(day), max(day), length= 100),
+                                  pos_ord=levels(pos_ord), 
+                                  stream=levels(stream)))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_pred <- cbind(mufa_position_order_S_pred,
+                       predict(mufa_position_order_S, 
+                               mufa_position_order_S_pred, 
+                               se.fit=TRUE, 
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat <- filter(mufa_position_order_S_pred, stream == "Dierbach")
+
+mufa_position_order_S_stat <- separate(mufa_position_order_S_stat, pos_ord, into= c("position", "order"))
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat_fit <- reshape2::dcast(mufa_position_order_S_stat, 
+                                                 day + stream + order ~ position,
+                                                 value.var="fit")
+names(mufa_position_order_S_stat_fit)[4:5] <- c("fit_forest", "fit_agriculture")
+
+mufa_position_order_S_stat_se <- reshape2::dcast(mufa_position_order_S_stat, day + 
+                                        stream + order ~ position, 
+                                      value.var="se.fit")
+names(mufa_position_order_S_stat_se)[4:5] <- c("se_forest", "se_agriculture")
+
+mufa_position_order_S_stat <- left_join(mufa_position_order_S_stat_fit, mufa_position_order_S_stat_se, by = c("day", "stream", "order"))
+```
+
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$crit <- with(mufa_position_order_S_stat, 1.959964)
+```
+
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$diff_a_f <- with(mufa_position_order_S_stat, 
+                                          fit_agriculture - fit_forest)
+```
+
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$sum_a_f <- with(mufa_position_order_S_stat, 
+                                          (se_agriculture^2) + (se_forest^2))
+```
+
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$sqrt_a_f <- with(mufa_position_order_S_stat, sqrt(sum_a_f))
+```
+
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$upper <- with(mufa_position_order_S_stat, 
+                                       diff_a_f + crit*sqrt_a_f)
+```
+
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$lower <- with(mufa_position_order_S_stat, 
+                                       diff_a_f - crit*sqrt_a_f)
+```
+
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat$sig <- with(mufa_position_order_S_stat,
+                                     between(rep(0,400), lower, upper)) # True means 0 included in CI, so not significant
+mufa_position_order_S_stat$sig <- 
+  gsub("FALSE","significant", mufa_position_order_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+mufa_position_order_S_stat <- reshape2::melt(mufa_position_order_S_stat, 
+                             id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                         "sqrt_a_f","sig", "upper", "lower",
+                                         "stream", "order"))
+
+mufa_position_order_S_stat <- separate(mufa_position_order_S_stat, variable, 
+                                      into = c("variable", "position"))
+
+mufa_position_order_S_stat <- reshape2::dcast(mufa_position_order_S_stat, 
+                                             day + crit + diff_a_f + 
+                                               sum_a_f + sqrt_a_f + sig + 
+                                               upper + lower + stream + 
+                                               position + order ~ variable,
+                                             value.var="value")
+
+mufa_position_order_S_stat$position <- factor(mufa_position_order_S_stat$position, levels = c("forest", "agriculture"))
+
+mufa_position_order_S_stat_sig <- filter(mufa_position_order_S_stat, sig == "significant")
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+mufa_position_Diptera_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data = mufa_position_order_S_stat[mufa_position_order_S_stat$order ==
+                                              "Diptera",], 
+            aes(col = position, x=day, y=fit)) +
+  geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order ==
+                                              "Diptera",], aes(x=day, y=fit, 
+                         fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), 
+              alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = mufa_position_order_S_stat_sig[mufa_position_order_S_stat_sig$order ==
+                                                   "Diptera",], 
+             aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+mufa_position_Ephemeroptera_S_plot <- ggplot() +
+  theme_classic() + 
+     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = mufa_position_order_S_stat_sig[mufa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Mayflies (Ephemeroptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+mufa_position_Trichoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title
+ = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = mufa_position_order_S_stat_sig[mufa_position_order_S_stat_sig$order == "Trichoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Caddisflies (Trichoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+mufa_position_Plecoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = mufa_position_order_S_stat_sig[mufa_position_order_S_stat_sig$order == "Plecoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Stoneflies (Plecoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+```
+
+### Get values for paper
+```{r, message=FALSE, warning=FALSE}
+mufa_position_dip_S_stat <- filter(mufa_position_order_S_stat, order == "Diptera")
+mufa_position_dip_S_stat_sig <- filter(mufa_position_order_S_stat_sig, order == "Diptera") 
+mufa_position_eph_S_stat <- filter(mufa_position_order_S_stat, order == "Ephemeroptera")
+mufa_position_eph_S_stat_sig <- filter(mufa_position_order_S_stat_sig, 
+                                     order == "Ephemeroptera")
+
+mufa_position_ple_S_stat <- filter(mufa_position_order_S_stat, order == "Plecoptera")
+mufa_position_ple_S_stat_sig <- filter(mufa_position_order_S_stat_sig, 
+                                     order == "Plecoptera")
+
+mufa_position_tri_S_stat <- filter(mufa_position_order_S_stat, order == "Trichoptera")
+mufa_position_tri_S_stat_sig <- filter(mufa_position_order_S_stat_sig, 
+                                     order == "Trichoptera")
+
+```
+
+## Fit PUFA HGAM for order in agriculture/forest
+
+* For theoretical background see: Pedersen, E. J., Miller, D. L., Simpson, G. L., & Ross, N. (2019). https://doi.org/10.7717/peerj.6876
+
+* Used to show seasonal patterns in pufa export
+
+* Fitted without global smoother
+
+### Similar group-level trends (shared penalty)
+```{r, message=FALSE, warning=FALSE}
+#pufa_position_order_S <- gam(pufa_area_day ~ s(day, pos_ord, bs = "fs") +
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#          method = "REML")
+
+#save(pufa_position_order_S, file="pufa_position_order_S.RData")
+load("pufa_position_order_S.RData")
+
+BIC(pufa_position_order_S)
+
+summary(pufa_position_order_S)
+
+draw(pufa_position_order_S)
+
+par(mfrow = c(2,2))
+gam.check(pufa_position_order_S)  # looks okay
+par(mfrow = c(1,1))
+```
+### Different group level-trends (individual penalties)
+```{r, message=FALSE, warning=FALSE}
+#pufa_position_order_I <- gam(pufa_area_day ~ s(day, by = pos_ord, bs = "cc")+
+#           s(pos_ord, bs = "re")+
+#            s(stream, bs = "re"),
+#          data = fa_emergence_hgam,
+#          family = tw(theta = NULL, link = "log",a=1.01,b=1.99),
+#         method = "REML")
+
+#save(pufa_position_order_I, file="pufa_position_order_I.RData")
+load("pufa_position_order_I.RData")
+
+BIC(pufa_position_order_S, pufa_position_order_I) # pufa_position_order_S better model
+
+summary(pufa_position_order_I)
+
+draw(pufa_position_order_I)
+
+par(mfrow = c(2,2))
+gam.check(pufa_position_order_I)  # looks okay
+par(mfrow = c(1,1))
+```
+
+### Effect size: Difference between mean fit
+Use difference between mean fit of agriculture and forest as effect size and calculate its 95 % CI
+Setup prediction data frame
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_pred <- with(fa_emergence_hgam,
+                      expand.grid(day=seq(min(day), max(day), length= 100),
+                                  pos_ord=levels(pos_ord), 
+                                  stream=levels(stream)))
+```
+Make the prediction, add this and a column of standard errors to the prediction data.frame
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_pred <- cbind(pufa_position_order_S_pred,
+                       predict(pufa_position_order_S, 
+                               pufa_position_order_S_pred, 
+                               se.fit=TRUE, 
+                               type="response",
+                               exclude = "s(stream)"))
+```
+For every day streams at same position have same fit and se.fit. So extract information of only one stream for further processing
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat <- filter(pufa_position_order_S_pred, stream == "Dierbach")
+
+pufa_position_order_S_stat <- separate(pufa_position_order_S_stat, pos_ord, into= c("position", "order"))
+```
+Put table into needed format
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat_fit <- reshape2::dcast(pufa_position_order_S_stat, 
+                                                 day + stream + order ~ position,
+                                                 value.var="fit")
+names(pufa_position_order_S_stat_fit)[4:5] <- c("fit_forest", "fit_agriculture")
+
+pufa_position_order_S_stat_se <- reshape2::dcast(pufa_position_order_S_stat, day + 
+                                        stream + order ~ position, 
+                                      value.var="se.fit")
+names(pufa_position_order_S_stat_se)[4:5] <- c("se_forest", "se_agriculture")
+
+pufa_position_order_S_stat <- left_join(pufa_position_order_S_stat_fit, pufa_position_order_S_stat_se, by = c("day", "stream", "order"))
+```
+
+Add critical value for 95 % CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$crit <- with(pufa_position_order_S_stat, 1.959964)
+```
+
+Calculate difference between fit of agriculture and forest
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$diff_a_f <- with(pufa_position_order_S_stat, 
+                                          fit_agriculture - fit_forest)
+```
+
+Calculate sum of se.fit^2
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$sum_a_f <- with(pufa_position_order_S_stat, 
+                                          (se_agriculture^2) + (se_forest^2))
+```
+
+Calculate sqrt of sum_a_f
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$sqrt_a_f <- with(pufa_position_order_S_stat, sqrt(sum_a_f))
+```
+
+Calculate upper CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$upper <- with(pufa_position_order_S_stat, 
+                                       diff_a_f + crit*sqrt_a_f)
+```
+
+Calculate lower CI
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$lower <- with(pufa_position_order_S_stat, 
+                                       diff_a_f - crit*sqrt_a_f)
+```
+
+Check if CI includes 0
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat$sig <- with(pufa_position_order_S_stat,
+                                     between(rep(0,400), lower, upper)) # True means 0 included in CI, so not significant
+pufa_position_order_S_stat$sig <- 
+  gsub("FALSE","significant", pufa_position_order_S_stat$sig)
+```
+
+### Plot 
+Put table in needed format
+```{r, message=FALSE, warning=FALSE}
+pufa_position_order_S_stat <- reshape2::melt(pufa_position_order_S_stat, 
+                             id.vars = c("day", "crit", "diff_a_f", "sum_a_f",
+                                         "sqrt_a_f","sig", "upper", "lower",
+                                         "stream", "order"))
+
+pufa_position_order_S_stat <- separate(pufa_position_order_S_stat, variable, 
+                                      into = c("variable", "position"))
+
+pufa_position_order_S_stat <- reshape2::dcast(pufa_position_order_S_stat, 
+                                             day + crit + diff_a_f + 
+                                               sum_a_f + sqrt_a_f + sig + 
+                                               upper + lower + stream + 
+                                               position + order ~ variable,
+                                             value.var="value")
+
+pufa_position_order_S_stat$position <- factor(pufa_position_order_S_stat$position, levels = c("forest", "agriculture"))
+
+pufa_position_order_S_stat_sig <- filter(pufa_position_order_S_stat, sig == "significant")
+```
+Plot
+```{r, message=FALSE, warning=FALSE}
+pufa_position_Diptera_S_plot <- ggplot() +
+  theme_classic() + 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        legend.text = element_text(size=20),
+        plot.title = element_text(size=20), 
+        axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data = pufa_position_order_S_stat[pufa_position_order_S_stat$order ==
+                                              "Diptera",], 
+            aes(col = position, x=day, y=fit)) +
+  geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order ==
+                                              "Diptera",], aes(x=day, y=fit, 
+                         fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), 
+              alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = pufa_position_order_S_stat_sig[pufa_position_order_S_stat_sig$order ==
+                                                   "Diptera",], 
+             aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+pufa_position_Ephemeroptera_S_plot <- ggplot() +
+  theme_classic() + 
+     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = pufa_position_order_S_stat_sig[pufa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Mayflies (Ephemeroptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+pufa_position_Trichoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title
+ = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = pufa_position_order_S_stat_sig[pufa_position_order_S_stat_sig$order == "Trichoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Caddisflies (Trichoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+
+pufa_position_Plecoptera_S_plot <- ggplot() +
+  theme_classic() + 
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+  guides(color = guide_legend(override.aes = list(size = 5))) +
+  geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
+  geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
+  scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
+  scale_color_manual(values=c("chartreuse4", "deepskyblue")) +
+  geom_point(data = pufa_position_order_S_stat_sig[pufa_position_order_S_stat_sig$order == "Plecoptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
+  geom_vline(aes(xintercept = 137), linetype = "dashed") +
+  geom_vline(aes(xintercept = 211), linetype = "dashed") +
+  labs(title = "Stoneflies (Plecoptera)", 
+       x=expression(day~ of ~ the ~ year),
+       y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
+  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
+  ylim(-0.01, 0.3)
+```
+
+### Get values for paper
+```{r, message=FALSE, warning=FALSE}
+pufa_position_dip_S_stat <- filter(pufa_position_order_S_stat, order == "Diptera")
+pufa_position_dip_S_stat_sig <- filter(pufa_position_order_S_stat_sig, order == "Diptera") 
+pufa_position_eph_S_stat <- filter(pufa_position_order_S_stat, order == "Ephemeroptera")
+pufa_position_eph_S_stat_sig <- filter(pufa_position_order_S_stat_sig, 
+                                     order == "Ephemeroptera")
+
+pufa_position_ple_S_stat <- filter(pufa_position_order_S_stat, order == "Plecoptera")
+pufa_position_ple_S_stat_sig <- filter(pufa_position_order_S_stat_sig, 
+                                     order == "Plecoptera")
+
+pufa_position_tri_S_stat <- filter(pufa_position_order_S_stat, order == "Trichoptera")
+pufa_position_tri_S_stat_sig <- filter(pufa_position_order_S_stat_sig, 
+                                     order == "Trichoptera")
+
+```
+
+## Save HGAM plot
+```{r, message=FALSE, warning=FALSE}
+plot_fa_order <- ggarrange(fa_position_Ephemeroptera_S_plot,
+                     sfa_position_Ephemeroptera_S_plot,
+                     mufa_position_Ephemeroptera_S_plot,
+                     pufa_position_Ephemeroptera_S_plot,
+                     fa_position_Diptera_S_plot,
+                     sfa_position_Diptera_S_plot,
+                     mufa_position_Diptera_S_plot,
+                     pufa_position_Diptera_S_plot,
+                     fa_position_Trichoptera_S_plot,
+                     sfa_position_Trichoptera_S_plot,
+                     mufa_position_Trichoptera_S_plot,
+                     pufa_position_Trichoptera_S_plot,
+                     fa_position_Plecoptera_S_plot,
+                     sfa_position_Plecoptera_S_plot,
+                     mufa_position_Plecoptera_S_plot,
+                     pufa_position_Plecoptera_S_plot,
+                  labels = c("(a)", "(b)", "(c)", "(d)", 
+                             "(e)", "(f)", "(g)", "(h)", 
+                             "(i)", "(j)", "(k)", "(l)", 
+                             "(m)", "(n)", "(o)", "(p)"),
+                  font.label = list(face = "bold"),
+                  ncol = 4, nrow = 4, 
+                  common.legend = TRUE, legend = "none")
+
+#png("plot_fa_order.png", width=20, height=20, units="in", res=300)
+plot_fa_order
+#dev.off()
+```
+
 ## Export HGAM output 
 ```{r, message =FALSE, warning= FALSE}
-#htmlreg(list(fa_position_S, fa_position_order_S), digits = 4, stars = #numeric(0), caption.above = TRUE, 
+#htmlreg(list(fa_position_S,
+#             sfa_position_S,
+#             mufa_position_S,
+#             pufa_position_S,
+#             fa_position_order_S,
+#             sfa_position_order_S,
+#             mufa_position_order_S,
+#             pufa_position_order_S), 
+#        digits = 4, caption.above = TRUE, 
 #        caption = "HGAM biomass", 
 #        float.pos = "h!", label = "tab:3", 
 #        custom.model.names = c("S HGAM FA land use", 
-#                               "S HGAM FA land use and order"), 
+#                               "S HGAM SFA land use",
+#                               "S HGAM MUFA land use",
+#                               "S HGAM PUFA land use",
+#                               "S HGAM FA land use and order",
+#                               "S HGAM SFA land use and order",
+#                               "S HGAM MUFA land use and order",
+#                               "S HGAM PUFA land use and order"), 
 #        file = "HGAM_S.doc")
 
-#htmlreg(list(fa_position_I, fa_position_order_I), digits = 4, stars = numeric(0), caption.above = TRUE, 
+#htmlreg(list(fa_position_I, 
+#             sfa_position_I,
+#             mufa_position_I,
+#             pufa_position_I,
+#             fa_position_order_I,
+#             sfa_position_order_I,
+#             mufa_position_order_I,
+#             pufa_position_order_I), digits = 4, stars = numeric(0), caption.above = TRUE, 
 #        caption = "HGAM biomass", 
 #        float.pos = "h!", label = "tab:3", 
-#        custom.model.names = c("I HGAM FA land use", 
-#                               "I HGAM FA land use and order"), 
+#        custom.model.names = c("I HGAM FA land use",
+#                               "I HGAM SFA land use",
+#                               "I HGAM MUFA land use",
+#                               "I HGAM PUFA land use",
+#                               "I HGAM FA land use and order",
+#                               "I HGAM SFA land use and order",
+#                               "I HGAM MUFA land use and order",
+#                               "I HGAM PUFA land use and order"), 
 #        file = "HGAM_I.doc")
 ```
 
 # Plot difference environmental data
 
-* Difference between vine and forest: x = value vine - value forest
+* Difference between agriculture and forest: x = value agriculture - value forest
 * x < 0 higher in forest
 * x > 0 higher in agriculture
 
@@ -3408,9 +4929,9 @@ plot_diff <- annotate_figure(plot_diff, top = text_grob(" ", face = "bold", size
 
 plot_diff <- annotate_figure(plot_diff, fig.lab = ("Differences in environmental variables between forested and agricultural sites"), fig.lab.pos = "top.left", fig.lab.size = 17, fig.lab.face = "bold")
 
-png("diff_plot.png", width=10, height=20, units="in", res=300)
+#png("diff_plot.png", width=10, height=20, units="in", res=300)
 plot_diff
-dev.off()
+#dev.off()
 ```
 
 

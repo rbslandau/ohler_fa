@@ -1,4 +1,4 @@
-# Repo for the publication: Land use alters ecosystem transfer of high value fatty acids by aquatic insects
+# Repo for the publication: Land use alters cross-ecosystem transfer of high value fatty acids by aquatic insects
 
 This repo contains the R code and data for the related manuscript submitted for publication.
 
@@ -11,9 +11,9 @@ Written by Katharina Ohler, revised by Verena C. Schreiner and Ralf B. Schäfer
   
   - 2_data_env.csv: Environmental variables for RDA
   
-  - 3_spider_identification_30.csv: Data on collection date, genus and additional characteristics of spiders used in ANOSIM, RDA
+  - 3_spider_identification_30.csv: Data about collection date, genus and so on of spiders used in ANOSIM, RDA
   
-  - 4_no_emergence.csv: Data on time points without emergence of aquatic insects used in HGAM
+  - 4_no_emergence.csv: Data about time points without emergence of aquatic insects used in HGAM
   
   - 5_biomass_emergence_family_sample.csv: Biomass and abundance of emergent aquatic insect families per sample for HGAM
   
