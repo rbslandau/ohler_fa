@@ -1768,9 +1768,9 @@ rda_total_plot <- ggplot() +
            aes(x=RDA1*3-0.15,y=RDA2*3,label=va_sc_names)) +
   geom_text(data = fa_sc,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
-  labs(title = "Emergence", 
-       x=expression(RDA1 ~ "*" ~"("~7~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~4~"%"~ total~ variance~ ")")) 
+  labs(title = "Total Emergence", 
+       x= "RDA1* (7% total variance)",
+       y="RDA2 (4% total variance)")
 ```
 
 ### Ephemeroptera
@@ -1858,8 +1858,8 @@ rda_eph_plot <- ggplot() +
   geom_text(data = fa_sc_eph,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
   labs(title = "Mayflies (Ephemeroptera)", 
-       x=expression(RDA1 ~"("~6~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~4~"%"~ total~ variance~ ")"))
+       x="RDA1 (6% total variance)",
+       y="RDA2 (4% total variance)")
 ```
 
 ### Plecoptera
@@ -1944,8 +1944,8 @@ rda_ple_plot <- ggplot() +
   geom_text(data = fa_sc_ple,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
   labs(title = "Stoneflies (Plecoptera)", 
-       x=expression(RDA1 ~"("~14~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~8~"%"~ total~ variance~ ")")) +
+       x="RDA1 (14% total variance)",
+       y="RDA2 (8% total variance)") +
   xlim(c(-2,2))
 ```
 
@@ -2042,8 +2042,8 @@ rda_tri_plot <- ggplot() +
   geom_text(data = fa_sc_tri,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
   labs(title = "Caddisflies (Trichoptera)", 
-       x=expression(RDA1 ~ "*" ~"("~7~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~2~"%"~ total~ variance~ ")")) +
+       x="RDA1* (7% total variance)",
+       y="RDA2 (2% total variance)") +
   xlim(c(-2,1))
 ```
 
@@ -2146,8 +2146,8 @@ rda_dip_plot <- ggplot() +
   geom_text(data = fa_sc_dip,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
   labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
-       x=expression(RDA1 ~ "*" ~"("~14~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~6~"%"~ total~ variance~ ")"))
+       x="RDA1* (14% total variance)",
+       y="RDA2 (6% total~ variance)")
 ```
 
 
@@ -2239,8 +2239,8 @@ rda_spi_plot <- ggplot() +
   geom_text(data = fa_sc_spi,
            aes(x=RDA1,y=RDA2,label=FA),alpha=0.5) +
   labs(title = "Spiders (Araneae)", 
-       x=expression(RDA1 ~"("~6~"%"~ total~ variance~ ")"),
-       y=expression(RDA2 ~"("~5~"%"~ total~ variance~ ")"))+
+       x="RDA1 (6% total variance)",
+       y="RDA2 (5% total variance)")+
   xlim(c(-1.5,2))
 ```
 
@@ -2971,7 +2971,8 @@ Plot
 ```{r, message=FALSE, warning=FALSE}
 fa_position_S_plot <- ggplot() +
   theme_classic() + 
-  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        plot.title = element_text(size=20), legend.text = element_text(size=20), 
         axis.text.x = element_blank(), axis.title.x = element_blank(), 
         axis.text.y = element_text(size = 15), 
         axis.title.y = element_text(size = 15)) +
@@ -2983,7 +2984,8 @@ fa_position_S_plot <- ggplot() +
   geom_point(data =fa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(x=expression(day~ of ~ the ~ year),
+  labs(title = "Fatty Acids",
+       x=expression(day~ of ~ the ~ year),
        y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
@@ -3177,7 +3179,8 @@ Plot
 ```{r, message=sfaLSE, warning=sfaLSE}
 sfa_position_S_plot <- ggplot() +
   theme_classic() + 
-  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        plot.title = element_text(size=20), legend.text = element_text(size=20), 
         axis.text.x = element_blank(), axis.title.x = element_blank(), 
         axis.text.y = element_text(size = 15), 
         axis.title.y = element_text(size = 15)) +
@@ -3189,7 +3192,8 @@ sfa_position_S_plot <- ggplot() +
   geom_point(data =sfa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(x=expression(day~ of ~ the ~ year),
+  labs(title = "Saturated Fatty Acids",
+    x=expression(day~ of ~ the ~ year),
        y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
@@ -3378,7 +3382,8 @@ Plot
 ```{r, message=FALSE, warning=FALSE}
 mufa_position_S_plot <- ggplot() +
   theme_classic() + 
-  theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), 
+  theme(legend.title = element_blank(), legend.position="bottom", 
+        plot.title = element_text(size=20), legend.text = element_text(size=20), 
         axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15), 
         axis.text.y = element_text(size = 15), 
         axis.title.y = element_text(size = 15)) +
@@ -3390,7 +3395,8 @@ mufa_position_S_plot <- ggplot() +
   geom_point(data =mufa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(x=expression(day~ of ~ the ~ year),
+  labs(title = "Monounsaturated Fatty Acids",
+       x=expression(day~ of ~ the ~ year),
        y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
@@ -3591,7 +3597,8 @@ pufa_position_S_plot <- ggplot() +
   geom_point(data =pufa_position_S_stat_sig, aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(x=expression(day~ of ~ the ~ year),
+  labs(title = "Polyunsaturated Fatty Acids",
+       x=expression(day~ of ~ the ~ year),
        y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
   annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
   annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
@@ -3816,8 +3823,8 @@ fa_position_Diptera_S_plot <- ggplot() +
         legend.text = element_text(size=20),
         plot.title = element_text(size=20), 
         axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), 
-        axis.title.y = element_text(size = 15)) +
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data = fa_position_order_S_stat[fa_position_order_S_stat$order ==
                                               "Diptera",], 
@@ -3833,18 +3840,24 @@ fa_position_Diptera_S_plot <- ggplot() +
              aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
+  labs(title = "Non-biting midges \n (Chironomidae, Diptera)",
        x=expression(day~ of ~ the ~ year),
        y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.16, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.16, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.16, label = "autumn", size = 6) +
+  ylim(-0.01, 0.16)
 
 fa_position_Ephemeroptera_S_plot <- ggplot() +
   theme_classic() + 
-     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+     theme(legend.title = element_blank(), 
+           legend.position="bottom", 
+           plot.title = element_text(size=20), 
+           legend.text = element_text(size=20), 
+           axis.text.x = element_blank(), 
+           axis.title.x = element_blank(), 
+        axis.text.y = element_text(size = 15), 
+        axis.title.y = element_text(size = 15)) +
   geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
   scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
@@ -3855,15 +3868,21 @@ fa_position_Ephemeroptera_S_plot <- ggplot() +
   labs(title = "Mayflies (Ephemeroptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.16, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.16, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.16, label = "autumn", size = 6) +
+  ylim(-0.01, 0.16)
 
 fa_position_Trichoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+   theme(legend.title = element_blank(), 
+         legend.position="bottom", 
+         plot.title = element_text(size=20), 
+         legend.text = element_text(size=20), 
+         axis.text.x = element_blank(), 
+         axis.title.x = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -3875,14 +3894,19 @@ fa_position_Trichoptera_S_plot <- ggplot() +
   labs(title = "Caddisflies (Trichoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.16, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.16, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.16, label = "autumn", size = 6) +
+  ylim(-0.01, 0.16)
 
 fa_position_Plecoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+   theme(legend.title = element_blank(), 
+         legend.position="bottom", 
+         plot.title = element_text(size=20), 
+         legend.text = element_text(size=20), 
+         axis.text = element_blank(), 
+         axis.title = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=fa_position_order_S_stat[fa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -3894,10 +3918,10 @@ fa_position_Plecoptera_S_plot <- ggplot() +
   labs(title = "Stoneflies (Plecoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(FA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.16, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.16, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.16, label = "autumn", size = 6) +
+  ylim(-0.01, 0.16)
 ```
 
 ### Get values for paper
@@ -4080,10 +4104,10 @@ sfa_position_Diptera_S_plot <- ggplot() +
   theme_classic() + 
   theme(legend.title = element_blank(), legend.position="bottom", 
         legend.text = element_text(size=20),
-        plot.title = element_text(size=20), 
+        plot.title = element_blank(), 
         axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), 
-        axis.title.y = element_text(size = 15)) +
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data = sfa_position_order_S_stat[sfa_position_order_S_stat$order ==
                                               "Diptera",], 
@@ -4102,15 +4126,19 @@ sfa_position_Diptera_S_plot <- ggplot() +
   labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.06, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.06, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.06, label = "autumn", size = 6) +
+  ylim(-0.01, 0.06)
 
 sfa_position_Ephemeroptera_S_plot <- ggplot() +
   theme_classic() + 
-     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+     theme(legend.title = element_blank(), 
+           legend.position="bottom", 
+           plot.title = element_blank(), 
+           legend.text = element_text(size=20), 
+           axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size=15), axis.title.y = element_text(size=15)) +
   geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
   scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
@@ -4118,18 +4146,18 @@ sfa_position_Ephemeroptera_S_plot <- ggplot() +
   geom_point(data = sfa_position_order_S_stat_sig[sfa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Mayflies (Ephemeroptera)", 
+  labs(title = "SFA", 
        x=expression(day~ of ~ the ~ year),
        y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.06, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.06, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.06, label = "autumn", size = 6) +
+  ylim(-0.01, 0.06)
 
 sfa_position_Trichoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_blank(), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_blank(), axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4141,14 +4169,15 @@ sfa_position_Trichoptera_S_plot <- ggplot() +
   labs(title = "Caddisflies (Trichoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.06, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.06, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.06, label = "autumn", size = 6) +
+  ylim(-0.01, 0.06)
 
 sfa_position_Plecoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_blank(), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(),
+         axis.title.y = element_blank(), axis.text.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=sfa_position_order_S_stat[sfa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4160,10 +4189,10 @@ sfa_position_Plecoptera_S_plot <- ggplot() +
   labs(title = "Stoneflies (Plecoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(SFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.06, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.06, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.06, label = "autumn", size = 6) +
+  ylim(-0.01, 0.06)
 ```
 
 ### Get values for paper
@@ -4346,10 +4375,10 @@ mufa_position_Diptera_S_plot <- ggplot() +
   theme_classic() + 
   theme(legend.title = element_blank(), legend.position="bottom", 
         legend.text = element_text(size=20),
-        plot.title = element_text(size=20), 
+        plot.title = element_blank(), 
         axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), 
-        axis.title.y = element_text(size = 15)) +
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data = mufa_position_order_S_stat[mufa_position_order_S_stat$order ==
                                               "Diptera",], 
@@ -4368,15 +4397,18 @@ mufa_position_Diptera_S_plot <- ggplot() +
   labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.02, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.02, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.02, label = "autumn", size = 6) +
+  ylim(0, 0.02)
 
 mufa_position_Ephemeroptera_S_plot <- ggplot() +
   theme_classic() + 
-     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+     theme(legend.title = element_blank(), legend.position="bottom", 
+           plot.title = element_blank(), 
+           legend.text = element_text(size=20), 
+           axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_text(size=15), axis.title.y = element_text(size=15)) +
   geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
   scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
@@ -4384,19 +4416,19 @@ mufa_position_Ephemeroptera_S_plot <- ggplot() +
   geom_point(data = mufa_position_order_S_stat_sig[mufa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Mayflies (Ephemeroptera)", 
+  labs(title = "MUFA", 
        x=expression(day~ of ~ the ~ year),
        y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.02, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.02, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.02, label = "autumn", size = 6) +
+  ylim(0, 0.02)
 
 mufa_position_Trichoptera_S_plot <- ggplot() +
   theme_classic() + 
    theme(legend.title = element_blank(), legend.position="bottom", plot.title
- = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+ = element_blank(), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
+        axis.text.y = element_blank(), axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4408,14 +4440,14 @@ mufa_position_Trichoptera_S_plot <- ggplot() +
   labs(title = "Caddisflies (Trichoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.02, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.02, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.02, label = "autumn", size = 6) +
+  ylim(0, 0.02)
 
 mufa_position_Plecoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_blank(), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=mufa_position_order_S_stat[mufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4427,10 +4459,10 @@ mufa_position_Plecoptera_S_plot <- ggplot() +
   labs(title = "Stoneflies (Plecoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(MUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.02, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.02, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.02, label = "autumn", size = 6) +
+  ylim(0, 0.02)
 ```
 
 ### Get values for paper
@@ -4612,10 +4644,10 @@ pufa_position_Diptera_S_plot <- ggplot() +
   theme_classic() + 
   theme(legend.title = element_blank(), legend.position="bottom", 
         legend.text = element_text(size=20),
-        plot.title = element_text(size=20), 
-        axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), 
-        axis.title.y = element_text(size = 15)) +
+        plot.title = element_blank(), 
+        axis.text.x = element_text(size=15), axis.title.x = element_text(size=15), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data = pufa_position_order_S_stat[pufa_position_order_S_stat$order ==
                                               "Diptera",], 
@@ -4634,15 +4666,16 @@ pufa_position_Diptera_S_plot <- ggplot() +
   labs(title = "Non-biting midges \n (Chironomidae, Diptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.10, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.10, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.10, label = "autumn", size = 6) +
+  ylim(-0.01, 0.10)
 
 pufa_position_Ephemeroptera_S_plot <- ggplot() +
   theme_classic() + 
-     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+     theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_blank(), legend.text = element_text(size=20), 
+           axis.text.x = element_text(size=15), axis.title.x = element_text(size=15), 
+        axis.text.y = element_text(size=15), axis.title.y = element_text(size=15)) +
   geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Ephemeroptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
   scale_fill_manual(values=c("chartreuse4", "deepskyblue"), aes(alpha = 0.1)) +
@@ -4650,19 +4683,20 @@ pufa_position_Ephemeroptera_S_plot <- ggplot() +
   geom_point(data = pufa_position_order_S_stat_sig[pufa_position_order_S_stat_sig$order == "Ephemeroptera",], aes(x=day, y=fit, col = position), show.legend = FALSE) +
   geom_vline(aes(xintercept = 137), linetype = "dashed") +
   geom_vline(aes(xintercept = 211), linetype = "dashed") +
-  labs(title = "Mayflies (Ephemeroptera)", 
+  labs(title = "PUFA", 
        x=expression(day~ of ~ the ~ year),
        y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.10, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.10, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.10, label = "autumn", size = 6) +
+  ylim(-0.01, 0.10)
 
 pufa_position_Trichoptera_S_plot <- ggplot() +
   theme_classic() + 
    theme(legend.title = element_blank(), legend.position="bottom", plot.title
- = element_text(size=20), legend.text = element_text(size=20), axis.text.x = element_blank(), axis.title.x = element_blank(), 
-        axis.text.y = element_text(size = 15), axis.title.y = element_text(size = 15)) +
+ = element_blank(), legend.text = element_text(size=20), 
+ axis.text.x = element_text(size=15), axis.title.x = element_text(size=15), 
+        axis.text.y = element_blank(), axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Trichoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4674,14 +4708,14 @@ pufa_position_Trichoptera_S_plot <- ggplot() +
   labs(title = "Caddisflies (Trichoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.10, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.10, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.10, label = "autumn", size = 6) +
+  ylim(-0.01, 0.10)
 
 pufa_position_Plecoptera_S_plot <- ggplot() +
   theme_classic() + 
-   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_text(size=20), legend.text = element_text(size=20), axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+   theme(legend.title = element_blank(), legend.position="bottom", plot.title = element_blank(), legend.text = element_text(size=20), axis.text.x = element_text(size = 15), axis.title.x = element_text(size = 15), axis.text.y = element_blank(), axis.title.y = element_blank()) +
   guides(color = guide_legend(override.aes = list(size = 5))) +
   geom_line(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, col = position)) +
   geom_ribbon(data=pufa_position_order_S_stat[pufa_position_order_S_stat$order == "Plecoptera",], aes(x=day, y=fit, fill = position, ymin=(fit - 2*se), ymax=(fit + 2*se)), alpha = 0.1, show.legend = FALSE) +
@@ -4693,10 +4727,10 @@ pufa_position_Plecoptera_S_plot <- ggplot() +
   labs(title = "Stoneflies (Plecoptera)", 
        x=expression(day~ of ~ the ~ year),
        y=expression(PUFA ~"("~"µ"~g~ ~m^-2~d^-1~")")) +
-  annotate(geom = "text", x = 105, y = 0.3, label = "spring", size = 6) +
-  annotate(geom = "text", x = 175, y = 0.3, label = "summer", size = 6) +
-  annotate(geom = "text", x = 240, y = 0.3, label = "autumn", size = 6) +
-  ylim(-0.01, 0.3)
+  annotate(geom = "text", x = 105, y = 0.10, label = "spring", size = 6) +
+  annotate(geom = "text", x = 175, y = 0.10, label = "summer", size = 6) +
+  annotate(geom = "text", x = 240, y = 0.10, label = "autumn", size = 6) +
+  ylim(-0.01, 0.10)
 ```
 
 ### Get values for paper
@@ -4720,28 +4754,29 @@ pufa_position_tri_S_stat_sig <- filter(pufa_position_order_S_stat_sig,
 ## Save HGAM plot
 ```{r, message=FALSE, warning=FALSE}
 plot_fa_order <- ggarrange(fa_position_Ephemeroptera_S_plot,
-                     sfa_position_Ephemeroptera_S_plot,
-                     mufa_position_Ephemeroptera_S_plot,
-                     pufa_position_Ephemeroptera_S_plot,
-                     fa_position_Diptera_S_plot,
-                     sfa_position_Diptera_S_plot,
-                     mufa_position_Diptera_S_plot,
-                     pufa_position_Diptera_S_plot,
-                     fa_position_Trichoptera_S_plot,
-                     sfa_position_Trichoptera_S_plot,
-                     mufa_position_Trichoptera_S_plot,
-                     pufa_position_Trichoptera_S_plot,
-                     fa_position_Plecoptera_S_plot,
-                     sfa_position_Plecoptera_S_plot,
-                     mufa_position_Plecoptera_S_plot,
-                     pufa_position_Plecoptera_S_plot,
+                           fa_position_Diptera_S_plot,
+                           fa_position_Trichoptera_S_plot,
+                           fa_position_Plecoptera_S_plot,
+                           sfa_position_Ephemeroptera_S_plot,
+                           sfa_position_Diptera_S_plot,
+                           sfa_position_Trichoptera_S_plot,
+                           sfa_position_Plecoptera_S_plot,
+                           mufa_position_Ephemeroptera_S_plot,
+                           mufa_position_Diptera_S_plot,
+                           mufa_position_Trichoptera_S_plot,
+                           mufa_position_Plecoptera_S_plot,
+                           pufa_position_Ephemeroptera_S_plot,
+                           pufa_position_Diptera_S_plot,
+                           pufa_position_Trichoptera_S_plot,
+                           pufa_position_Plecoptera_S_plot,
                   labels = c("(a)", "(b)", "(c)", "(d)", 
                              "(e)", "(f)", "(g)", "(h)", 
                              "(i)", "(j)", "(k)", "(l)", 
                              "(m)", "(n)", "(o)", "(p)"),
                   font.label = list(face = "bold"),
                   ncol = 4, nrow = 4, 
-                  common.legend = TRUE, legend = "none")
+                  common.legend = TRUE, legend = "none",
+                  align = "v")
 
 #png("plot_fa_order.png", width=20, height=20, units="in", res=300)
 plot_fa_order
